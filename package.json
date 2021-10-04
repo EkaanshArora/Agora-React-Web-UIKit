@@ -59,5 +59,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "agora-rtc-react": "git://github.com/AgoraIO-Community/agora-rtc-react.git#v1.1.0"
+  }
 }

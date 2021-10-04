@@ -1,10 +1,25 @@
-import * as React from 'react'
-import styles from './styles.module.css'
+import React, { useState } from 'react'
+// import styles from './styles.module.css'
+import AgoraUIKit from './AgoraUIKit'
+// import { layout } from './PropsContext'
 
-interface Props {
-  text: string
-}
+export const ExampleComponent: React.FunctionComponent = () => {
+  const [videocall, setVideocall] = useState(true)
 
-export const ExampleComponent = ({ text }: Props) => {
-  return <div className={styles.test}>Example Component: {text}</div>
+  return videocall ? (
+    <div style={{ display: 'flex', flex: 1, height: '100%' }}>
+      <AgoraUIKit
+        rtcProps={{
+          appId: '',
+          channel: 'test'
+          // layout: layout.grid
+        }}
+        callbacks={{ Endcall: () => setVideocall(false) }}
+      />
+    </div>
+  ) : (
+    <div onClick={() => setVideocall(true)}>
+      <p>start</p>
+    </div>
+  )
 }
