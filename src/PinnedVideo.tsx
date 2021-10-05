@@ -6,14 +6,19 @@ import { AgoraVideoPlayer } from 'agora-rtc-react'
 
 const PinnedVideo: React.FC = () => {
   const [width, setWidth] = useState(window.innerWidth)
+  const [height, setHeight] = useState(window.innerHeight)
   const { dispatch } = useContext(RtcContext)
+  // const [isLandscape, setIsLandscape] = useState(width > height)
+  const isLandscape = width > height
 
   useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth)
+      setHeight(window.innerHeight)
+      // setIsLandscape(width > height)
     }
     window.addEventListener('resize', handleResize)
-    console.log(width)
+    // console.log(isLandscape)
     return () => {
       window.removeEventListener('resize', handleResize)
     }
@@ -24,7 +29,7 @@ const PinnedVideo: React.FC = () => {
       style={{
         display: 'flex',
         flex: 1,
-        flexDirection: 'row',
+        flexDirection: isLandscape ? 'row' : 'column-reverse',
         overflow: 'hidden'
       }}
     >
@@ -33,16 +38,20 @@ const PinnedVideo: React.FC = () => {
           // maxUsers[0] ? ( // check if audience & live don't render if uid === local
           maxUsers[0].videoTrack && maxUsers[0].hasVideo ? (
             <AgoraVideoPlayer
-              style={{ width: '100%', display: 'flex', flex: 4 }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                flex: isLandscape ? 5 : 4
+              }}
               videoTrack={maxUsers[0].videoTrack}
               // key={maxUsers[0].uid}
             />
           ) : (
             <div
               style={{
-                backgroundColor: '#ff0',
+                backgroundColor: 'palevioletred',
                 display: 'flex',
-                flex: 4
+                flex: isLandscape ? 5 : 4
               }}
             >
               <p>{maxUsers[0].uid}</p>
@@ -53,10 +62,11 @@ const PinnedVideo: React.FC = () => {
       <div
         className='agui-pin-scroll'
         style={{
-          overflowY: 'scroll',
+          overflowY: isLandscape ? 'scroll' : 'hidden',
+          overflowX: !isLandscape ? 'scroll' : 'hidden',
           display: 'flex',
           flex: 1,
-          flexDirection: 'column',
+          flexDirection: isLandscape ? 'column' : 'row',
           borderStyle: 'solid',
           borderWidth: 1,
           borderColor: '#f0f'
@@ -68,8 +78,8 @@ const PinnedVideo: React.FC = () => {
               user.hasVideo && user.videoTrack ? (
                 <AgoraVideoPlayer
                   style={{
-                    width: '99%',
-                    minHeight: '300px',
+                    minHeight: isLandscape ? '35vh' : '99%',
+                    minWidth: isLandscape ? '99%' : '40vw',
                     borderStyle: 'solid',
                     borderWidth: 1,
                     borderColor: '#0ff'

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
@@ -6,20 +6,40 @@ const GridVideo: React.FC = () => {
   const max = useContext(MaxUidContext)
   const min = useContext(MinUidContext)
   const users = [...max, ...min]
+  const [width, setWidth] = useState(window.innerWidth)
+  const [height, setHeight] = useState(window.innerHeight)
+  const isLandscape = width > height
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth)
+      setHeight(window.innerHeight)
+      // setIsLandscape(width > height)
+    }
+    window.addEventListener('resize', handleResize)
+    // console.log(isLandscape)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  })
+
   return (
     <div
       style={{
         width: '100%',
         height: '100%',
         display: 'grid',
-        gridTemplateColumns:
-          users.length > 9
+        gridTemplateColumns: isLandscape
+          ? users.length > 9
             ? 'auto auto auto auto'
             : users.length > 4
             ? 'auto auto auto'
             : users.length > 1
             ? 'auto auto'
             : 'auto'
+          : users.length > 8
+          ? 'auto auto auto'
+          : 'auto auto'
       }}
     >
       {users.map((u) =>
@@ -30,7 +50,13 @@ const GridVideo: React.FC = () => {
             key={u.uid}
           />
         ) : (
-          <div />
+          <div
+            style={{
+              height: '100%',
+              width: '100%',
+              backgroundColor: 'palevioletred'
+            }}
+          />
         )
       )}
     </div>

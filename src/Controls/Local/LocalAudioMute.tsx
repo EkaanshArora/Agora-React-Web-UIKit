@@ -12,22 +12,14 @@ function LocalAudioMute() {
     user: UIKitUser,
     dispatch: RtcContextInterface['dispatch']
   ) => {
-    let res
     if (user.uid === 0) {
-      dispatch({ type: 'local-user-mute-audio', value: 'muting' })
-      if (user.hasAudio === false) {
-        res = (user.audioTrack as unknown as ILocalAudioTrack)
-          ?.setEnabled(true)
-          .then(() => dispatch({ type: 'local-user-mute-audio', value: true }))
-          .catch((e) => console.log(e))
-      } else if (user.hasAudio === true) {
-        res = (user.audioTrack as unknown as ILocalAudioTrack)
-          ?.setEnabled(false)
-          .then(() => dispatch({ type: 'local-user-mute-audio', value: false }))
-          .catch((e) => console.log(e))
-      } else res = '!click - waiting'
+      const status = user.hasAudio
+      // eslint-disable-next-line no-unused-expressions
+      ;(user.audioTrack as ILocalAudioTrack)
+        ?.setEnabled(!status)
+        .then(() => dispatch({ type: 'local-user-mute-audio', value: !status }))
+        .catch((e) => console.log(e))
     }
-    console.log('!rs', res)
   }
 
   const { dispatch } = useContext(RtcContext)
@@ -39,7 +31,6 @@ function LocalAudioMute() {
         name={local.hasAudio ? 'mic' : 'micOff'}
         onClick={() => mute(local, dispatch)}
       />
-      {/* <p style={{ margin: 0 }}>{local.hasAudio + ''}</p> */}
     </div>
   )
 }

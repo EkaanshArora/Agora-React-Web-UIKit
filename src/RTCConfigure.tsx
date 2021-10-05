@@ -28,11 +28,11 @@ export interface UIKitUser {
   /**
    * The subscribed audio track.
    */
-  audioTrack?: IRemoteAudioTrack
+  audioTrack?: IRemoteAudioTrack | ILocalAudioTrack
   /**
    * The subscribed video track.
    */
-  videoTrack?: IRemoteVideoTrack
+  videoTrack?: IRemoteVideoTrack | ILocalVideoTrack
   /**
    * Whether the remote user is sending an audio track.
    * - `true`: The remote user is sending an audio track.
@@ -91,6 +91,10 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       setLocalVideoTrack(tracks[1])
       console.log('!update-video', tracks)
       dispatch({ type: 'update-user-video', value: tracks })
+    } else if (error) {
+      console.error(error)
+      // console.log(ready)
+      // setReady(false)
     }
     return () => {
       if (tracks) {
@@ -100,7 +104,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         tracks[1]?.close()
       }
     }
-  }, [trackReady, error])
+  }, [trackReady, error]) //, ready])
 
   let { callActive } = props
   if (callActive === undefined) {
@@ -140,6 +144,115 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           })
         }
         break
+      case 'user-joined':
+        if (uids.indexOf(action.value[0].uid) === -1) {
+          console.log(
+            '!user joined',
+            action.value[0].uid,
+            action.value[0].hasVideo,
+            action.value[0].videoTrack
+          )
+          const minUpdate: stateType['min'] = [
+            ...state.min,
+            { ...action.value[0] } // needs to be a deep copy of the object to evaluate getter function
+          ]
+          if (minUpdate.length === 1 && state.max[0].uid === 0) {
+            stateUpdate = {
+              max: minUpdate,
+              min: state.max
+            }
+          } else {
+            stateUpdate = {
+              min: minUpdate
+            }
+          }
+          console.log('new user joined!\n', action.value[0].uid)
+        }
+        break
+      case 'user-unpublished':
+        if (uids.indexOf(action.value[0].uid) !== -1) {
+          if (state.max[0].uid === action.value[0].uid) {
+            stateUpdate = {
+              max: [{ ...action.value[0] }] // needs to be a deep copy of the object to evaluate getter function
+            }
+          } else {
+            const minUpdate: stateType['min'] = [
+              ...state.min.filter(
+                (user: UIKitUser) => user.uid !== action.value[0].uid
+              ),
+              action.value[0]
+            ]
+            stateUpdate = {
+              min: minUpdate
+            }
+          }
+          console.log('!user unpublished', action.value[0].uid)
+        }
+        break
+      case 'user-published':
+        // enhancment- remove from max and move to bottom of min
+        // if (state.max[0].uid === action.value.uid) {
+        //   if (state.min.length > 1) {
+        //     stateUpdate = {
+        //       max: [state.min[0]],
+        //       min: [...state.min.slice(1), action.value]
+        //     }
+        //   } else {
+        //     stateUpdate = {
+        //       max: [action.value]
+        //     }
+        //   }
+        // }
+        // const [remoteUser, mediaType] = action.value
+        if (state.max[0].uid === action.value[0].uid) {
+          stateUpdate = {
+            max: [action.value[0]]
+          }
+        } else {
+          stateUpdate = {
+            min: [
+              action.value[0],
+              ...state.min.filter(
+                (user: UIKitUser) => user.uid !== action.value[0].uid
+              )
+            ]
+          }
+        }
+        console.log(
+          '!user published',
+          action.value[0].uid,
+          action.value[0].videoTrack,
+          action.value[0].hasVideo
+        )
+        break
+      case 'user-left':
+        if (state.max[0].uid === action.value[0].uid) {
+          const minUpdate = [...state.min]
+          stateUpdate = {
+            max: [minUpdate.pop()],
+            min: minUpdate
+          }
+        } else {
+          stateUpdate = {
+            min: state.min.filter((user) => user.uid !== action.value[0].uid)
+          }
+        }
+        break
+      case 'user-swap':
+        if (state.max[0].uid === action.value.uid) {
+        } else {
+          stateUpdate = {
+            max: [action.value],
+            min: [
+              // action.value,
+              ...state.min.filter(
+                (user: UIKitUser) => user.uid !== action.value.uid
+              ),
+              state.max[0]
+            ]
+          }
+        }
+        break
       case 'local-user-mute-video':
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
@@ -170,117 +283,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             }
             return user
           })
-        }
-        break
-      case 'user-joined':
-        if (uids.indexOf(action.value.uid) === -1) {
-          console.log(
-            '!user joined',
-            action.value.uid,
-            action.value.hasVideo,
-            action.value.videoTrack
-          )
-          const minUpdate: stateType['min'] = [
-            ...state.min,
-            { ...action.value } // needs to be a deep copy of the object to evaluate getter function
-          ]
-          if (minUpdate.length === 1 && state.max[0].uid === 0) {
-            stateUpdate = {
-              max: minUpdate,
-              min: state.max
-            }
-          } else {
-            stateUpdate = {
-              min: minUpdate
-            }
-          }
-          console.log('new user joined!\n', action.value)
-        }
-        break
-      case 'user-unpublished':
-        if (uids.indexOf(action.value.uid) !== -1) {
-          if (state.max[0].uid === action.value.uid) {
-            stateUpdate = {
-              max: [{ ...action.value }] // needs to be a deep copy of the object to evaluate getter function
-            }
-          } else {
-            const minUpdate: stateType['min'] = [
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value.uid
-              ),
-              action.value
-            ]
-            stateUpdate = {
-              min: minUpdate
-            }
-          }
-          console.log('!user unpublished', action.value.uid)
-        }
-        break
-      case 'user-published':
-        // enhancment- remove from max and move to bottom of min
-        // if (state.max[0].uid === action.value.uid) {
-        //   if (state.min.length > 1) {
-        //     stateUpdate = {
-        //       max: [state.min[0]],
-        //       min: [...state.min.slice(1), action.value]
-        //     }
-        //   } else {
-        //     stateUpdate = {
-        //       max: [action.value]
-        //     }
-        //   }
-        // }
-        if (state.max[0].uid === action.value[1].uid) {
-          stateUpdate = {
-            max: [action.value[1]]
-          }
-        } else {
-          stateUpdate = {
-            min: [
-              action.value[1],
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value[1].uid
-              )
-            ]
-          }
-        }
-        console.log(
-          '!user published',
-          action.value[1].uid,
-          action.value[1].videoTrack,
-          action.value[1].hasVideo
-        )
-        break
-      case 'user-swap':
-        if (state.max[0].uid === action.value.uid) {
-          // stateUpdate = {
-          //   max: [action.value]
-          // }
-        } else {
-          stateUpdate = {
-            max: [action.value],
-            min: [
-              // action.value,
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value.uid
-              ),
-              state.max[0]
-            ]
-          }
-        }
-        break
-      case 'user-left':
-        if (state.max[0].uid === action.value.uid) {
-          const minUpdate = [...state.min]
-          stateUpdate = {
-            max: [minUpdate.pop()],
-            min: minUpdate
-          }
-        } else {
-          stateUpdate = {
-            min: state.min.filter((user) => user.uid !== action.value.uid)
-          }
         }
         break
       case 'leave-channel':
@@ -321,61 +323,61 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     async function init() {
       try {
         console.log(client)
-        client.on('user-joined', async (remoteUser) => {
+        client.on('user-joined', async (...args) => {
+          const [remoteUser] = args
           console.log('!user-joined', remoteUser)
           dispatch({
             type: 'user-joined',
-            value: remoteUser
+            value: args
           })
         })
 
-        client.on('user-published', async (remoteUser, mediaType) => {
+        client.on('user-published', async (...args) => {
           // Get current peer IDs
+          const [remoteUser, mediaType] = args
           console.log('!user-published', remoteUser.uid)
           client
             .subscribe(remoteUser, mediaType)
             .then((e) => {
               console.log('!sub', e)
               if (mediaType === 'audio') {
-                console.log('!!!audio', remoteUser.audioTrack?.play())
                 // eslint-disable-next-line no-unused-expressions
+                remoteUser.audioTrack?.play()
               }
               dispatch({
                 type: 'user-published',
-                value: [mediaType, remoteUser]
+                value: args
               })
             })
             .catch((e) => console.log(e))
         })
 
-        client.on('user-unpublished', async (remoteUser, mediaType) => {
+        client.on('user-unpublished', async (...args) => {
+          const [remoteUser, mediaType] = args
           if (mediaType === 'video') {
-            // await client.subscribe(remoteUser, 'video')
-            // console.log('!state-dispatch')
             dispatch({
               type: 'user-unpublished',
-              value: remoteUser
+              value: args
             })
+          } else if (mediaType === 'audio') {
+            // eslint-disable-next-line no-unused-expressions
+            remoteUser.audioTrack?.stop()
           }
         })
 
-        client.on(
-          'connection-state-change',
-          async (curState, prevState, reason) => {
-            // Get current peer IDs
-            console.log('!connection', prevState, curState, reason)
-            if (curState === 'CONNECTED') {
-              setChannelJoined(true)
-            } else if (curState === 'DISCONNECTED') {
-              dispatch({ type: 'leave-channel', value: null })
-            } else {
-              setChannelJoined(false)
-            }
+        client.on('connection-state-change', async (...args) => {
+          const [curState, prevState, reason] = args
+          console.log('!connection', prevState, curState, reason)
+          if (curState === 'CONNECTED') {
+            setChannelJoined(true)
+          } else if (curState === 'DISCONNECTED') {
+            dispatch({ type: 'leave-channel', value: null })
+          } else {
+            setChannelJoined(false)
           }
-        )
-        console.log(client)
+        })
 
-        client.on('user-left', (args) => {
+        client.on('user-left', (...args) => {
           dispatch({
             type: 'user-left',
             value: args
@@ -397,15 +399,13 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       init()
       return () => {
         try {
-          // console.log('!!cleanup', client.getListeners('user-joined'), tracks)
           client.removeAllListeners()
-          // leave()
         } catch (e) {
           console.log(e)
         }
       }
     } else return () => {}
-  }, [rtcProps.appId])
+  }, [rtcProps.appId]) //, ready])
 
   useEffect(() => {
     async function publish() {
