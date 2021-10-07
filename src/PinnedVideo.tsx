@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState } from 'react'
 import { MinUidConsumer } from './MinUidContext'
 import { MaxUidConsumer } from './MaxUidContext'
 import RtcContext from './RtcContext'
-import { AgoraVideoPlayer } from 'agora-rtc-react'
+import { AgoraVideoPlayer, IAgoraRTCRemoteUser } from 'agora-rtc-react'
+import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
 
 const PinnedVideo: React.FC = () => {
   const [width, setWidth] = useState(window.innerWidth)
@@ -76,33 +77,47 @@ const PinnedVideo: React.FC = () => {
           {(minUsers) =>
             minUsers.map((user) =>
               user.hasVideo && user.videoTrack ? (
-                <AgoraVideoPlayer
+                <React.Fragment key={user.uid}>
+                  <AgoraVideoPlayer
+                    style={{
+                      minHeight: isLandscape ? '35vh' : '99%',
+                      minWidth: isLandscape ? '99%' : '40vw',
+                      borderStyle: 'solid',
+                      borderWidth: 1,
+                      borderColor: '#0ff'
+                    }}
+                    onClick={() => {
+                      dispatch({ type: 'user-swap', value: user })
+                    }}
+                    videoTrack={user.videoTrack}
+                  />
+                  <RemoteVideoMute
+                    remoteUser={user as unknown as IAgoraRTCRemoteUser}
+                  />
+                </React.Fragment>
+              ) : (
+                <div
+                  key={user.uid}
                   style={{
                     minHeight: isLandscape ? '35vh' : '99%',
                     minWidth: isLandscape ? '99%' : '40vw',
                     borderStyle: 'solid',
                     borderWidth: 1,
+                    backgroundColor: 'palevioletred',
                     borderColor: '#0ff'
                   }}
-                  onClick={() => {
-                    dispatch({ type: 'user-swap', value: user })
-                  }}
-                  videoTrack={user.videoTrack}
-                  key={user.uid}
-                />
-              ) : (
-                <div
-                  key={user.uid}
-                  onClick={() => {
-                    dispatch({ type: 'user-swap', value: user })
-                  }}
-                  style={{
-                    backgroundColor: '#ff0',
-                    width: '100%',
-                    minHeight: '300px'
-                  }}
                 >
-                  <p>{user.uid}</p>
+                  <p
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      dispatch({ type: 'user-swap', value: user })
+                    }}
+                  >
+                    {user.uid}
+                  </p>
+                  <RemoteVideoMute
+                    remoteUser={user as unknown as IAgoraRTCRemoteUser}
+                  />
                 </div>
               )
             )

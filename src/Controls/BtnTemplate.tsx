@@ -32,7 +32,8 @@ const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
         backgroundColor: 'rgba(0,0,0,0.1)',
         alignItems: 'center',
         justifyContent: 'center',
-        display: 'flex'
+        display: 'flex',
+        cursor: 'pointer'
       }}
       onClick={props.onClick}
     >

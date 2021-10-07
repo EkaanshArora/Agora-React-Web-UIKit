@@ -1,3 +1,11 @@
+discuss
+- remote mute
+- local mute
+- tracks init
+- TS
+
+
+
 ```
 State = [
     max: [

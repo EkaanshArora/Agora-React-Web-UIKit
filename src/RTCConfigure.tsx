@@ -146,15 +146,10 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         break
       case 'user-joined':
         if (uids.indexOf(action.value[0].uid) === -1) {
-          console.log(
-            '!user joined',
-            action.value[0].uid,
-            action.value[0].hasVideo,
-            action.value[0].videoTrack
-          )
           const minUpdate: stateType['min'] = [
             ...state.min,
-            { ...action.value[0] } // needs to be a deep copy of the object to evaluate getter function
+            { ...action.value[0], hasAudio: false, hasVideo: false } // needs to be a copy of the object
+            // **NOTE**: getter methods are undefined at this point due to object copy, hasVideo is undefined instead of false
           ]
           if (minUpdate.length === 1 && state.max[0].uid === 0) {
             stateUpdate = {
@@ -173,7 +168,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         if (uids.indexOf(action.value[0].uid) !== -1) {
           if (state.max[0].uid === action.value[0].uid) {
             stateUpdate = {
-              max: [{ ...action.value[0] }] // needs to be a deep copy of the object to evaluate getter function
+              max: [action.value[0]]
             }
           } else {
             const minUpdate: stateType['min'] = [
@@ -285,11 +280,22 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           })
         }
         break
+      case 'remote-user-mute-video':
+        stateUpdate = {
+          min: state.min.map((user: UIKitUser) => {
+            if (user.uid === action.value.uid) return user
+            else return user
+          }),
+          max: state.max.map((user: UIKitUser) => {
+            if (user.uid === action.value.uid) return user
+            else return user
+          })
+        }
+        break
       case 'leave-channel':
         stateUpdate = initState
         break
     }
-
     console.log(callbacks, callbacks[action.type])
 
     if (callbacks && callbacks[action.type]) {
@@ -297,7 +303,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       console.log('callback executed', callbacks, callbacks[action.type])
     }
 
-    console.log('!state-update', { ...state, ...stateUpdate })
+    console.log('!!state-update', { ...state, ...stateUpdate }, stateUpdate)
     return { ...state, ...stateUpdate }
   }
 
@@ -354,6 +360,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
         client.on('user-unpublished', async (...args) => {
           const [remoteUser, mediaType] = args
+          console.log('!user-unpublished', remoteUser.uid)
           if (mediaType === 'video') {
             dispatch({
               type: 'user-unpublished',

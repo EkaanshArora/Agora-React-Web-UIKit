@@ -29,6 +29,7 @@ export interface RtcContextInterface {
       | 'mute-local-video'
       | 'local-user-mute-video'
       | 'local-user-mute-audio'
+      | 'remote-user-mute-video'
       | 'user-swap'
       | 'Endcall'
     value: IAgoraRTCRemoteUser | any
