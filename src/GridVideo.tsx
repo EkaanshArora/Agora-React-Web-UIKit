@@ -2,14 +2,17 @@ import React, { useContext, useEffect, useState } from 'react'
 import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
+import RtcContext from './RtcContext'
+import { remoteTrackState } from './RTCConfigure'
 const GridVideo: React.FC = () => {
   const max = useContext(MaxUidContext)
   const min = useContext(MinUidContext)
-  const users = [...max, ...min]
+  const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
+  const { mediaStore } = useContext(RtcContext)
   const [width, setWidth] = useState(window.innerWidth)
   const [height, setHeight] = useState(window.innerHeight)
   const isLandscape = width > height
-
+  // console.log('!grid', mediaStore, users)
   useEffect(() => {
     const handleResize = () => {
       setWidth(window.innerWidth)
@@ -42,15 +45,16 @@ const GridVideo: React.FC = () => {
           : 'auto auto'
       }}
     >
-      {users.map((u) =>
-        u.hasVideo && u.videoTrack ? (
+      {users.map((user) =>
+        user.hasVideo === remoteTrackState.subbed ? (
           <AgoraVideoPlayer
-            videoTrack={u.videoTrack as IRemoteVideoTrack}
+            videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
             style={{ height: '100%', width: '100%' }}
-            key={u.uid}
+            key={user.uid}
           />
         ) : (
           <div
+            key={user.uid}
             style={{
               height: '100%',
               width: '100%',

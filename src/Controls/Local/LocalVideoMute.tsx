@@ -8,22 +8,23 @@ import { UIKitUser } from '../../RTCConfigure'
 import { ILocalVideoTrack } from 'agora-rtc-react'
 
 function LocalVideoMute() {
+  const { dispatch, mediaStore } = useContext(RtcContext)
+  const local = useContext(LocalContext)
+
   const mute = async (
     user: UIKitUser,
     dispatch: RtcContextInterface['dispatch']
   ) => {
     if (user.uid === 0) {
       const status = user.hasVideo
+      // !!!!! fix type
       // eslint-disable-next-line no-unused-expressions
-      ;(user.videoTrack as ILocalVideoTrack)
+      ;(mediaStore[user.uid].videoTrack as unknown as ILocalVideoTrack)
         ?.setEnabled(!status)
         .then(() => dispatch({ type: 'local-user-mute-video', value: !status }))
         .catch((e) => console.log(e))
     }
   }
-
-  const { dispatch } = useContext(RtcContext)
-  const local = useContext(LocalContext)
 
   return (
     <div>

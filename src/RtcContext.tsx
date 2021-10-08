@@ -5,6 +5,7 @@ import {
   ILocalVideoTrack,
   IAgoraRTCRemoteUser
 } from 'agora-rtc-react'
+import { mediaStore } from './RTCConfigure'
 
 export interface UidInterface {
   // TODO: refactor local to 0 and remove string.
@@ -22,6 +23,7 @@ export interface RtcContextInterface {
   client: IAgoraRTCClient
   localVideoTrack: ILocalVideoTrack | null
   localAudioTrack: ILocalAudioTrack | null
+  mediaStore: mediaStore
   dispatch: React.Dispatch<{
     type:
       | 'user-published'

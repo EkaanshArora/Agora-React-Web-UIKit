@@ -20,31 +20,37 @@ import {
 } from 'agora-rtc-react'
 import { MinUidProvider } from './MinUidContext'
 
+interface media {
+  videoTrack?: IRemoteVideoTrack
+  audioTrack?: IRemoteAudioTrack
+}
+export type mediaStore = {
+  [key in UID]: media
+}
+
+export enum remoteTrackState {
+  yes = 0, // remote published
+  no = 2, // remote unpublished
+  subbed = 1 // remote published and subscribed
+}
+
 export interface UIKitUser {
   /**
    * The ID of the remote user.
    */
   uid: UID
   /**
-   * The subscribed audio track.
-   */
-  audioTrack?: IRemoteAudioTrack | ILocalAudioTrack
-  /**
-   * The subscribed video track.
-   */
-  videoTrack?: IRemoteVideoTrack | ILocalVideoTrack
-  /**
    * Whether the remote user is sending an audio track.
    * - `true`: The remote user is sending an audio track.
    * - `false`: The remote user is not sending an audio track.
    */
-  hasAudio: boolean
+  hasAudio: remoteTrackState
   /**
    * Whether the remote user is sending a video track.
    * - `true`: The remote user is sending an audio track.
    * - `false`: The remote user is not sending an audio track.
    */
-  hasVideo: true | false | 'muting' | 'unmuting'
+  hasVideo: remoteTrackState
 }
 
 const useClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
@@ -84,12 +90,19 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   const { ready: trackReady, tracks, error } = useTracks()
 
+  const mediaStore = useRef<mediaStore>({})
+
   useEffect(() => {
     console.log('!tracksReady', trackReady, error)
     if (tracks !== null) {
       setLocalAudioTrack(tracks[0])
       setLocalVideoTrack(tracks[1])
       console.log('!update-video', tracks)
+      // !!!!! fix type
+      mediaStore.current[0] = {
+        audioTrack: tracks[0] as any,
+        videoTrack: tracks[1] as any
+      }
       dispatch({ type: 'update-user-video', value: tracks })
     } else if (error) {
       console.error(error)
@@ -115,7 +128,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     state: stateType,
     action: React.ReducerAction<(a: stateType, b: any) => stateType>
   ) => {
-    let stateUpdate = {}
+    // !!!!!! fix this type
+    let stateUpdate: stateType = initState
     const uids: UID[] = [...state.max, ...state.min].map(
       (u: UIKitUser) => u.uid
     )
@@ -126,21 +140,25 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.videoTrack = action.value[1]
-              user.audioTrack = action.value[0]
-              user.hasAudio = true
-              user.hasVideo = true
+              return {
+                uid: 0,
+                hasAudio: remoteTrackState.subbed,
+                hasVideo: remoteTrackState.subbed
+              }
+            } else {
+              return user
             }
-            return user
           }),
           max: state.max.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.videoTrack = action.value[1]
-              user.audioTrack = action.value[0]
-              user.hasAudio = true
-              user.hasVideo = true
+              return {
+                uid: 0,
+                hasAudio: remoteTrackState.subbed,
+                hasVideo: remoteTrackState.subbed
+              }
+            } else {
+              return user
             }
-            return user
           })
         }
         break
@@ -148,8 +166,11 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         if (uids.indexOf(action.value[0].uid) === -1) {
           const minUpdate: stateType['min'] = [
             ...state.min,
-            { ...action.value[0], hasAudio: false, hasVideo: false } // needs to be a copy of the object
-            // **NOTE**: getter methods are undefined at this point due to object copy, hasVideo is undefined instead of false
+            {
+              uid: action.value[0].uid,
+              hasAudio: remoteTrackState.no,
+              hasVideo: remoteTrackState.no
+            }
           ]
           if (minUpdate.length === 1 && state.max[0].uid === 0) {
             stateUpdate = {
@@ -158,7 +179,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             }
           } else {
             stateUpdate = {
-              min: minUpdate
+              min: minUpdate,
+              max: state.max
             }
           }
           console.log('new user joined!\n', action.value[0].uid)
@@ -168,50 +190,92 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         if (uids.indexOf(action.value[0].uid) !== -1) {
           if (state.max[0].uid === action.value[0].uid) {
             stateUpdate = {
-              max: [action.value[0]]
+              max: [
+                {
+                  uid: action.value[0].uid,
+                  hasAudio: remoteTrackState.no,
+                  hasVideo: remoteTrackState.no
+                }
+              ],
+              min: state.min
             }
           } else {
             const minUpdate: stateType['min'] = [
               ...state.min.filter(
                 (user: UIKitUser) => user.uid !== action.value[0].uid
               ),
-              action.value[0]
+              {
+                uid: action.value[0].uid,
+                hasAudio: remoteTrackState.no,
+                hasVideo: remoteTrackState.no
+              }
             ]
             stateUpdate = {
-              min: minUpdate
+              min: minUpdate,
+              max: state.max
             }
           }
           console.log('!user unpublished', action.value[0].uid)
         }
         break
       case 'user-published':
-        // enhancment- remove from max and move to bottom of min
-        // if (state.max[0].uid === action.value.uid) {
-        //   if (state.min.length > 1) {
-        //     stateUpdate = {
-        //       max: [state.min[0]],
-        //       min: [...state.min.slice(1), action.value]
-        //     }
-        //   } else {
-        //     stateUpdate = {
-        //       max: [action.value]
-        //     }
-        //   }
-        // }
-        // const [remoteUser, mediaType] = action.value
         if (state.max[0].uid === action.value[0].uid) {
           stateUpdate = {
-            max: [action.value[0]]
+            max: [
+              {
+                uid: action.value[0].uid,
+                hasAudio:
+                  action.value[1] === 'audio'
+                    ? remoteTrackState.subbed
+                    : state.max[0].hasAudio,
+                hasVideo:
+                  action.value[1] === 'video'
+                    ? remoteTrackState.subbed
+                    : state.max[0].hasVideo
+              }
+            ],
+            min: state.min
           }
         } else {
           stateUpdate = {
-            min: [
-              action.value[0],
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value[0].uid
-              )
-            ]
+            min: state.min.map((user) => {
+              if (user.uid !== action.value[0].uid) {
+                return user
+              } else {
+                return {
+                  uid: user.uid,
+                  hasAudio:
+                    action.value[1] === 'audio'
+                      ? remoteTrackState.subbed
+                      : user.hasAudio,
+                  hasVideo:
+                    action.value[1] === 'video'
+                      ? remoteTrackState.subbed
+                      : user.hasVideo
+                }
+              }
+            }),
+            max: state.max
           }
+          // stateUpdate = {
+          //   min: [
+          //     {
+          //       uid: action.value[0].uid,
+          //       hasAudio:
+          //         action.value[1] === 'audio'
+          //           ? remoteTrackState.subbed
+          //           : action.value[0].hasAudio,
+          //       hasVideo:
+          //         action.value[1] === 'video'
+          //           ? remoteTrackState.subbed
+          //           : action.value[0].hasVideo
+          //     },
+          //     ...state.min.filter(
+          //       (user: UIKitUser) => user.uid !== action.value[0].uid
+          //     )
+          //   ],
+          //   max: state.max
+          // }
         }
         console.log(
           '!user published',
@@ -224,12 +288,13 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         if (state.max[0].uid === action.value[0].uid) {
           const minUpdate = [...state.min]
           stateUpdate = {
-            max: [minUpdate.pop()],
+            max: [minUpdate.pop() as UIKitUser],
             min: minUpdate
           }
         } else {
           stateUpdate = {
-            min: state.min.filter((user) => user.uid !== action.value[0].uid)
+            min: state.min.filter((user) => user.uid !== action.value[0].uid),
+            max: state.max
           }
         }
         break
@@ -252,15 +317,31 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.hasVideo = action.value
+              // user.hasVideo = action.value
+              return {
+                uid: 0,
+                hasAudio: user.hasAudio,
+                hasVideo: action.value
+                  ? remoteTrackState.subbed
+                  : remoteTrackState.yes
+              }
+            } else {
+              return user
             }
-            return user
           }),
           max: state.max.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.hasVideo = action.value
+              // user.hasVideo = action.value
+              return {
+                uid: 0,
+                hasAudio: user.hasAudio,
+                hasVideo: action.value
+                  ? remoteTrackState.subbed
+                  : remoteTrackState.yes
+              }
+            } else {
+              return user
             }
-            return user
           })
         }
         break
@@ -268,26 +349,54 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.hasAudio = action.value
+              // user.hasVideo = action.value
+              return {
+                uid: 0,
+                hasAudio: action.value,
+                hasVideo: user.hasVideo
+              }
+            } else {
+              return user
             }
-            return user
           }),
           max: state.max.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              user.hasAudio = action.value
+              // user.hasVideo = action.value
+              return {
+                uid: 0,
+                hasAudio: action.value,
+                hasVideo: user.hasVideo
+              }
+            } else {
+              return user
             }
-            return user
           })
         }
         break
       case 'remote-user-mute-video':
+        // window['track'] = action.value.videoTrack
+        // window['client'] = client
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
-            if (user.uid === action.value.uid) return user
+            if (user.uid === action.value[0].uid)
+              return {
+                uid: user.uid,
+                hasVideo: action.value[1]
+                  ? remoteTrackState.yes
+                  : remoteTrackState.subbed,
+                hasAudio: user.hasAudio
+              }
             else return user
           }),
           max: state.max.map((user: UIKitUser) => {
-            if (user.uid === action.value.uid) return user
+            if (user.uid === action.value[0].uid)
+              return {
+                uid: user.uid,
+                hasVideo: action.value[1]
+                  ? remoteTrackState.yes
+                  : remoteTrackState.subbed,
+                hasAudio: user.hasAudio
+              }
             else return user
           })
         }
@@ -311,10 +420,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     max: [
       {
         uid: 0,
-        audioTrack: undefined,
-        hasAudio: false,
-        videoTrack: undefined,
-        hasVideo: false
+        hasAudio: remoteTrackState.no,
+        hasVideo: remoteTrackState.no
       }
     ] as UIKitUser[],
     min: [] as UIKitUser[]
@@ -332,6 +439,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         client.on('user-joined', async (...args) => {
           const [remoteUser] = args
           console.log('!user-joined', remoteUser)
+          mediaStore.current[remoteUser.uid] = {}
           dispatch({
             type: 'user-joined',
             value: args
@@ -346,6 +454,14 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             .subscribe(remoteUser, mediaType)
             .then((e) => {
               console.log('!sub', e)
+              mediaStore.current[remoteUser.uid][mediaType + 'Track'] =
+                remoteUser[mediaType + 'Track']
+              console.log(
+                '!!mediaStore',
+                mediaStore.current,
+                mediaType + 'Track',
+                remoteUser[mediaType + 'Track']
+              )
               if (mediaType === 'audio') {
                 // eslint-disable-next-line no-unused-expressions
                 remoteUser.audioTrack?.play()
@@ -483,6 +599,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     <RtcProvider
       value={{
         client: client,
+        mediaStore: mediaStore.current,
         localVideoTrack: localVideoTrack,
         localAudioTrack: localAudioTrack,
         dispatch: dispatch

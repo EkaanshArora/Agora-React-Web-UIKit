@@ -8,6 +8,9 @@ import { UIKitUser } from '../../RTCConfigure'
 import { ILocalAudioTrack } from 'agora-rtc-react'
 
 function LocalAudioMute() {
+  const { dispatch, mediaStore } = useContext(RtcContext)
+  const local = useContext(LocalContext)
+
   const mute = async (
     user: UIKitUser,
     dispatch: RtcContextInterface['dispatch']
@@ -15,15 +18,12 @@ function LocalAudioMute() {
     if (user.uid === 0) {
       const status = user.hasAudio
       // eslint-disable-next-line no-unused-expressions
-      ;(user.audioTrack as ILocalAudioTrack)
+      ;(mediaStore[user.uid].audioTrack as unknown as ILocalAudioTrack)
         ?.setEnabled(!status)
         .then(() => dispatch({ type: 'local-user-mute-audio', value: !status }))
         .catch((e) => console.log(e))
     }
   }
-
-  const { dispatch } = useContext(RtcContext)
-  const local = useContext(LocalContext)
 
   return (
     <div>

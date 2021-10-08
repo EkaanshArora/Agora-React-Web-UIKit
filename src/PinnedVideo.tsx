@@ -2,8 +2,9 @@ import React, { useContext, useEffect, useState } from 'react'
 import { MinUidConsumer } from './MinUidContext'
 import { MaxUidConsumer } from './MaxUidContext'
 import RtcContext from './RtcContext'
-import { AgoraVideoPlayer, IAgoraRTCRemoteUser } from 'agora-rtc-react'
+import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
+import { remoteTrackState } from './RTCConfigure'
 
 const PinnedVideo: React.FC = () => {
   const [width, setWidth] = useState(window.innerWidth)
@@ -11,6 +12,7 @@ const PinnedVideo: React.FC = () => {
   const { dispatch } = useContext(RtcContext)
   // const [isLandscape, setIsLandscape] = useState(width > height)
   const isLandscape = width > height
+  const { mediaStore } = useContext(RtcContext)
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,14 +39,16 @@ const PinnedVideo: React.FC = () => {
       <MaxUidConsumer>
         {(maxUsers) =>
           // maxUsers[0] ? ( // check if audience & live don't render if uid === local
-          maxUsers[0].videoTrack && maxUsers[0].hasVideo ? (
+          maxUsers[0].hasVideo === remoteTrackState.subbed ? (
             <AgoraVideoPlayer
               style={{
                 width: '100%',
                 display: 'flex',
                 flex: isLandscape ? 5 : 4
               }}
-              videoTrack={maxUsers[0].videoTrack}
+              videoTrack={
+                mediaStore[maxUsers[0].uid].videoTrack as IRemoteVideoTrack
+              }
               // key={maxUsers[0].uid}
             />
           ) : (
@@ -76,7 +80,7 @@ const PinnedVideo: React.FC = () => {
         <MinUidConsumer>
           {(minUsers) =>
             minUsers.map((user) =>
-              user.hasVideo && user.videoTrack ? (
+              user.hasVideo === remoteTrackState.subbed ? (
                 <React.Fragment key={user.uid}>
                   <AgoraVideoPlayer
                     style={{
@@ -89,11 +93,11 @@ const PinnedVideo: React.FC = () => {
                     onClick={() => {
                       dispatch({ type: 'user-swap', value: user })
                     }}
-                    videoTrack={user.videoTrack}
+                    videoTrack={
+                      mediaStore[user.uid].videoTrack as IRemoteVideoTrack
+                    }
                   />
-                  <RemoteVideoMute
-                    remoteUser={user as unknown as IAgoraRTCRemoteUser}
-                  />
+                  <RemoteVideoMute UIKitUser={user} />
                 </React.Fragment>
               ) : (
                 <div
@@ -115,9 +119,7 @@ const PinnedVideo: React.FC = () => {
                   >
                     {user.uid}
                   </p>
-                  <RemoteVideoMute
-                    remoteUser={user as unknown as IAgoraRTCRemoteUser}
-                  />
+                  <RemoteVideoMute UIKitUser={user} />
                 </div>
               )
             )
