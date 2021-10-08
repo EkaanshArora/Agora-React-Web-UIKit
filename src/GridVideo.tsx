@@ -42,7 +42,9 @@ const GridVideo: React.FC = () => {
             : 'auto'
           : users.length > 8
           ? 'auto auto auto'
-          : 'auto auto'
+          : users.length > 1
+          ? 'auto auto'
+          : 'auto'
       }}
     >
       {users.map((user) =>

@@ -17,9 +17,10 @@ const AgoraUIKit: React.FC<PropsInterface> = (props) => {
     <PropsProvider value={props}>
       <div
         style={{
-          width: '100vw',
-          height: '100vh',
+          // width: '100vw',
+          // height: '100vh',
           display: 'flex',
+          flex: 1,
           flexDirection: 'column'
         }}
       >
