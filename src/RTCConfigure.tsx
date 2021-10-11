@@ -24,8 +24,13 @@ interface media {
   videoTrack?: IRemoteVideoTrack
   audioTrack?: IRemoteAudioTrack
 }
+interface localMedia {
+  videoTrack?: ILocalVideoTrack
+  audioTrack?: ILocalAudioTrack
+}
+
 export type mediaStore = {
-  [key in UID]: media
+  [key in UID]: media | localMedia
 }
 
 export enum remoteTrackState {
@@ -98,10 +103,9 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       setLocalAudioTrack(tracks[0])
       setLocalVideoTrack(tracks[1])
       console.log('!update-video', tracks)
-      // !!!!! fix type
       mediaStore.current[0] = {
-        audioTrack: tracks[0] as any,
-        videoTrack: tracks[1] as any
+        audioTrack: tracks[0],
+        videoTrack: tracks[1]
       }
       dispatch({ type: 'update-user-video', value: tracks })
     } else if (error) {
@@ -126,10 +130,11 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   const reducer = (
     state: stateType,
+    // !!!!!! fix this type b: any
     action: React.ReducerAction<(a: stateType, b: any) => stateType>
   ) => {
     // !!!!!! fix this type
-    let stateUpdate: stateType = initState
+    let stateUpdate: Partial<stateType> = initState
     const uids: UID[] = [...state.max, ...state.min].map(
       (u: UIKitUser) => u.uid
     )
@@ -306,7 +311,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           stateUpdate = {
             max: [action.value],
             min: [
-              // action.value,
               ...state.min.filter(
                 (user: UIKitUser) => user.uid !== action.value.uid
               ),
@@ -319,7 +323,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              // user.hasVideo = action.value
               return {
                 uid: 0,
                 hasAudio: user.hasAudio,
@@ -333,7 +336,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           }),
           max: state.max.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              // user.hasVideo = action.value
               return {
                 uid: 0,
                 hasAudio: user.hasAudio,
@@ -351,7 +353,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              // user.hasVideo = action.value
               return {
                 uid: 0,
                 hasAudio: action.value,
@@ -363,7 +364,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           }),
           max: state.max.map((user: UIKitUser) => {
             if (user.uid === 0) {
-              // user.hasVideo = action.value
               return {
                 uid: 0,
                 hasAudio: action.value,
@@ -440,7 +440,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       console.log('callback executed', callbacks, callbacks[action.type])
     }
 
-    console.log('!!state-update', { ...state, ...stateUpdate }, stateUpdate)
+    console.log('!state-update', { ...state, ...stateUpdate }, stateUpdate)
     return { ...state, ...stateUpdate }
   }
 
@@ -484,12 +484,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               console.log('!sub', e)
               mediaStore.current[remoteUser.uid][mediaType + 'Track'] =
                 remoteUser[mediaType + 'Track']
-              console.log(
-                '!!mediaStore',
-                mediaStore.current,
-                mediaType + 'Track',
-                remoteUser[mediaType + 'Track']
-              )
               if (mediaType === 'audio') {
                 // eslint-disable-next-line no-unused-expressions
                 remoteUser.audioTrack?.play()

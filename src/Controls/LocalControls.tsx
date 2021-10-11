@@ -18,10 +18,7 @@ function Controls() {
     <LocalUserContextComponent>
       <div
         style={{
-          // position: 'absolute',
-          // bottom: 25,
-          // left: 0,
-          backgroundColor: 'red',
+          backgroundColor: '#007bff',
           width: '100%',
           height: 70,
           zIndex: 10,

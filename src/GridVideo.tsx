@@ -27,7 +27,6 @@ const GridVideo: React.FC = () => {
       setWidth(parentRef.current.offsetWidth)
       setHeight(parentRef.current.offsetHeight)
     }
-    console.log('!!UECALLED')
     return () => {
       window.removeEventListener('resize', handleResize)
     }

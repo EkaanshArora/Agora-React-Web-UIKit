@@ -7,7 +7,6 @@ import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
 import SwapUser from './Controls/SwapUser'
 
 const MinVideoView = (props: { user: UIKitUser }) => {
-  // const { dispatch } = useContext(RtcContext)
   const { mediaStore } = useContext(RtcContext)
   const [isShown, setIsShown] = useState(false)
   const { user } = props

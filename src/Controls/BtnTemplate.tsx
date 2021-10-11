@@ -1,29 +1,15 @@
 import React from 'react'
-// import PropsContext, { IconsInterface } from './../PropsContext'
-// import styles from '../Style'
-import icons from './Icons'
-
-// interface BtnTemplateInterface {
-// name: keyof IconsInterface
-// color?: string
-// onPress?: TouchableOpacityProps['onPress']
-// style?: StyleProp<ViewStyle>
-// }
+import Icons from './Icons'
 interface BtnTemplateInterface {
   name: string
-  // color?: string
+  color?: string
   onClick: () => void
   disabled?: boolean
   // style?: StyleProp<ViewStyle>
 }
 
-const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
-  onClick: () => void
-  name: string
-  disabled?: boolean
-}) => {
-  // const { styleProps } = useContext(PropsContext)
-  // const { BtnTemplateStyles, iconSize, customIcon } = styleProps || {}
+const BtnTemplate = (props: BtnTemplateInterface) => {
+  const { onClick, name, disabled } = props
 
   return (
     <div
@@ -31,30 +17,30 @@ const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
         width: 35,
         height: 35,
         borderRadius: '100%',
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(1,1,1,0.2)',
         alignItems: 'center',
         justifyContent: 'center',
         display: 'flex',
-        cursor: props.disabled ? 'auto' : 'pointer'
+        cursor: disabled ? 'auto' : 'pointer'
       }}
-      onClick={props.onClick}
+      onClick={onClick}
     >
-      <img
-        style={{
-          margin: 'auto',
-          display: 'flex',
-          verticalAlign: 'middle',
-          opacity: props.disabled ? 0.3 : 1,
-          // filter: sepia(1),
-          width: 25, // iconSize || 25,
-          height: 25 // iconSize || 25
-          // tintColor: theme || props.color || '#fff',
-        }}
-        src={
-          icons[props.name]
-          // customIcon?.[props.name] ? customIcon[props.name] : icons[props.name]
-        }
-      />
+      <svg
+        style={{ width: 24, height: 24 }}
+        xmlns='http://www.w3.org/2000/svg'
+        width='24'
+        height='24'
+        viewBox='0 0 24 24'
+        fill='none'
+        opacity={disabled ? '0.5' : '1'}
+        stroke='#fff'
+        strokeWidth='2'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        className='feather feather-video'
+      >
+        {Icons[name]}
+      </svg>
     </div>
   )
 }
