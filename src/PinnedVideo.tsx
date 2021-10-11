@@ -1,34 +1,35 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { MinUidConsumer } from './MinUidContext'
 import { MaxUidConsumer } from './MaxUidContext'
-import RtcContext from './RtcContext'
-import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
-import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
-import { remoteTrackState } from './RTCConfigure'
+import MaxVideoView from './MaxVideoView'
+import MinVideoView from './MinVideoView'
 
 const PinnedVideo: React.FC = () => {
-  const [width, setWidth] = useState(window.innerWidth)
-  const [height, setHeight] = useState(window.innerHeight)
-  const { dispatch } = useContext(RtcContext)
-  // const [isLandscape, setIsLandscape] = useState(width > height)
+  const parentRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  const [height, setHeight] = useState(0)
   const isLandscape = width > height
-  const { mediaStore } = useContext(RtcContext)
 
   useEffect(() => {
     const handleResize = () => {
-      setWidth(window.innerWidth)
-      setHeight(window.innerHeight)
-      // setIsLandscape(width > height)
+      if (parentRef.current) {
+        setWidth(parentRef.current.offsetWidth)
+        setHeight(parentRef.current.offsetHeight)
+      }
     }
     window.addEventListener('resize', handleResize)
-    // console.log(isLandscape)
+    if (parentRef.current) {
+      setWidth(parentRef.current.offsetWidth)
+      setHeight(parentRef.current.offsetHeight)
+    }
     return () => {
       window.removeEventListener('resize', handleResize)
     }
-  })
+  }, [])
 
   return (
     <div
+      ref={parentRef}
       style={{
         display: 'flex',
         flex: 1,
@@ -36,34 +37,19 @@ const PinnedVideo: React.FC = () => {
         overflow: 'hidden'
       }}
     >
-      <MaxUidConsumer>
-        {(maxUsers) =>
-          // maxUsers[0] ? ( // check if audience & live don't render if uid === local
-          maxUsers[0].hasVideo === remoteTrackState.subbed ? (
-            <AgoraVideoPlayer
-              style={{
-                width: '100%',
-                display: 'flex',
-                flex: isLandscape ? 5 : 4
-              }}
-              videoTrack={
-                mediaStore[maxUsers[0].uid].videoTrack as IRemoteVideoTrack
-              }
-              // key={maxUsers[0].uid}
-            />
-          ) : (
-            <div
-              style={{
-                backgroundColor: 'palevioletred',
-                display: 'flex',
-                flex: isLandscape ? 5 : 4
-              }}
-            >
-              <p>{maxUsers[0].uid}</p>
-            </div>
-          )
-        }
-      </MaxUidConsumer>
+      <div
+        style={{
+          display: 'flex',
+          flex: isLandscape ? 5 : 4
+        }}
+      >
+        <MaxUidConsumer>
+          {(maxUsers) => (
+            // maxUsers[0] ? ( // check if audience & live don't render if uid === local
+            <MaxVideoView user={maxUsers[0]} />
+          )}
+        </MaxUidConsumer>
+      </div>
       <div
         className='agui-pin-scroll'
         style={{
@@ -79,50 +65,21 @@ const PinnedVideo: React.FC = () => {
       >
         <MinUidConsumer>
           {(minUsers) =>
-            minUsers.map((user) =>
-              user.hasVideo === remoteTrackState.subbed ? (
-                <React.Fragment key={user.uid}>
-                  <AgoraVideoPlayer
-                    style={{
-                      minHeight: isLandscape ? '35vh' : '99%',
-                      minWidth: isLandscape ? '99%' : '40vw',
-                      borderStyle: 'solid',
-                      borderWidth: 1,
-                      borderColor: '#0ff'
-                    }}
-                    onClick={() => {
-                      dispatch({ type: 'user-swap', value: user })
-                    }}
-                    videoTrack={
-                      mediaStore[user.uid].videoTrack as IRemoteVideoTrack
-                    }
-                  />
-                  <RemoteVideoMute UIKitUser={user} />
-                </React.Fragment>
-              ) : (
-                <div
-                  key={user.uid}
-                  style={{
-                    minHeight: isLandscape ? '35vh' : '99%',
-                    minWidth: isLandscape ? '99%' : '40vw',
-                    borderStyle: 'solid',
-                    borderWidth: 1,
-                    backgroundColor: 'palevioletred',
-                    borderColor: '#0ff'
-                  }}
-                >
-                  <p
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      dispatch({ type: 'user-swap', value: user })
-                    }}
-                  >
-                    {user.uid}
-                  </p>
-                  <RemoteVideoMute UIKitUser={user} />
-                </div>
-              )
-            )
+            minUsers.map((user) => (
+              <div
+                style={{
+                  minHeight: isLandscape ? '35vh' : '99%',
+                  minWidth: isLandscape ? '99%' : '40vw',
+                  borderStyle: 'solid',
+                  borderWidth: 1,
+                  borderColor: '#0ff',
+                  display: 'flex'
+                }}
+                key={user.uid}
+              >
+                <MinVideoView user={user} />
+              </div>
+            ))
           }
         </MinUidConsumer>
       </div>

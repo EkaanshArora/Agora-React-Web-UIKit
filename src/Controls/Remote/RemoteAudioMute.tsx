@@ -3,27 +3,27 @@ import RtcContext from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
 import { remoteTrackState, UIKitUser } from '../../RTCConfigure'
 
-function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
+function RemoteAudioMute(props: { UIKitUser: UIKitUser }) {
   const { client, dispatch } = useContext(RtcContext)
   const { UIKitUser } = props
-  const isDisabled = UIKitUser.hasVideo === remoteTrackState.no
+  const isDisabled = UIKitUser.hasAudio === remoteTrackState.no
 
   const mute = async () => {
     const remoteUser = client.remoteUsers?.find((u) => u.uid === UIKitUser.uid)
-    const status = UIKitUser.hasVideo === remoteTrackState.subbed
+    const status = UIKitUser.hasAudio === remoteTrackState.subbed
     if (status && remoteUser) {
       try {
-        client.unsubscribe(remoteUser, 'video').then(() => {
-          dispatch({ type: 'remote-user-mute-video', value: [UIKitUser, true] })
+        client.unsubscribe(remoteUser, 'audio').then(() => {
+          dispatch({ type: 'remote-user-mute-audio', value: [UIKitUser, true] })
         })
       } catch (error) {
         console.error(error)
       }
     } else if (remoteUser) {
       try {
-        client.subscribe(remoteUser, 'video').then(() => {
+        client.subscribe(remoteUser, 'audio').then(() => {
           dispatch({
-            type: 'remote-user-mute-video',
+            type: 'remote-user-mute-audio',
             value: [UIKitUser, false]
           })
         })
@@ -38,17 +38,15 @@ function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
       <div>
         <BtnTemplate
           name={
-            UIKitUser.hasVideo === remoteTrackState.subbed
-              ? 'videocam'
-              : 'videocamOff'
+            UIKitUser.hasAudio === remoteTrackState.subbed ? 'mic' : 'micOff'
           }
           onClick={() => mute()}
         />
       </div>
     ) : (
-      <BtnTemplate name='videocam' disabled onClick={() => {}} />
+      <BtnTemplate name='mic' disabled onClick={() => {}} />
     )
   ) : null
 }
 
-export default RemoteVideoMute
+export default RemoteAudioMute

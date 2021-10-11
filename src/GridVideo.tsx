@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
@@ -9,25 +9,33 @@ const GridVideo: React.FC = () => {
   const min = useContext(MinUidContext)
   const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
   const { mediaStore } = useContext(RtcContext)
+
+  const parentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(window.innerWidth)
   const [height, setHeight] = useState(window.innerHeight)
   const isLandscape = width > height
-  // console.log('!grid', mediaStore, users)
+
   useEffect(() => {
     const handleResize = () => {
-      setWidth(window.innerWidth)
-      setHeight(window.innerHeight)
-      // setIsLandscape(width > height)
+      if (parentRef.current) {
+        setWidth(parentRef.current.offsetWidth)
+        setHeight(parentRef.current.offsetHeight)
+      }
     }
     window.addEventListener('resize', handleResize)
-    // console.log(isLandscape)
+    if (parentRef.current) {
+      setWidth(parentRef.current.offsetWidth)
+      setHeight(parentRef.current.offsetHeight)
+    }
+    console.log('!!UECALLED')
     return () => {
       window.removeEventListener('resize', handleResize)
     }
-  })
+  }, [])
 
   return (
     <div
+      ref={parentRef}
       style={{
         width: '100%',
         height: '100%',
@@ -42,7 +50,7 @@ const GridVideo: React.FC = () => {
             : 'auto'
           : users.length > 8
           ? 'auto auto auto'
-          : users.length > 1
+          : users.length > 2
           ? 'auto auto'
           : 'auto'
       }}

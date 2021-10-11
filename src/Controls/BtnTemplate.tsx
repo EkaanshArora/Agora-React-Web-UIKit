@@ -13,12 +13,14 @@ interface BtnTemplateInterface {
   name: string
   // color?: string
   onClick: () => void
+  disabled?: boolean
   // style?: StyleProp<ViewStyle>
 }
 
 const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
   onClick: () => void
   name: string
+  disabled?: boolean
 }) => {
   // const { styleProps } = useContext(PropsContext)
   // const { BtnTemplateStyles, iconSize, customIcon } = styleProps || {}
@@ -29,11 +31,11 @@ const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
         width: 35,
         height: 35,
         borderRadius: '100%',
-        backgroundColor: 'rgba(0,0,0,0.1)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
         alignItems: 'center',
         justifyContent: 'center',
         display: 'flex',
-        cursor: 'pointer'
+        cursor: props.disabled ? 'auto' : 'pointer'
       }}
       onClick={props.onClick}
     >
@@ -42,6 +44,7 @@ const BtnTemplate: React.FC<BtnTemplateInterface> = (props: {
           margin: 'auto',
           display: 'flex',
           verticalAlign: 'middle',
+          opacity: props.disabled ? 0.3 : 1,
           // filter: sepia(1),
           width: 25, // iconSize || 25,
           height: 25 // iconSize || 25

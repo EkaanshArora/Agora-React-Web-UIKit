@@ -1,14 +1,11 @@
 import React, { useContext } from 'react'
-// import PropsContext from './PropsContext'
 import RtcContext, { RtcContextInterface } from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
-// import styles from './Style'
 import { LocalContext } from '../../LocalUserContext'
 import { UIKitUser } from '../../RTCConfigure'
-import { ILocalVideoTrack } from 'agora-rtc-react'
 
 function LocalVideoMute() {
-  const { dispatch, mediaStore } = useContext(RtcContext)
+  const { dispatch, localVideoTrack } = useContext(RtcContext)
   const local = useContext(LocalContext)
 
   const mute = async (
@@ -17,9 +14,8 @@ function LocalVideoMute() {
   ) => {
     if (user.uid === 0) {
       const status = user.hasVideo
-      // !!!!! fix type
       // eslint-disable-next-line no-unused-expressions
-      ;(mediaStore[user.uid].videoTrack as unknown as ILocalVideoTrack)
+      localVideoTrack
         ?.setEnabled(!status)
         .then(() => dispatch({ type: 'local-user-mute-video', value: !status }))
         .catch((e) => console.log(e))

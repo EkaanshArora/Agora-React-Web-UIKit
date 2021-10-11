@@ -11,7 +11,7 @@ export const ExampleComponent: React.FunctionComponent = () => {
       <AgoraUIKit
         rtcProps={{
           appId: '',
-          channel: 'test'
+          channel: 'test',
           // layout: layout.grid
         }}
         callbacks={{ Endcall: () => setVideocall(false) }}
