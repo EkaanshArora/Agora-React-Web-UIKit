@@ -1,7 +1,7 @@
 import React, { useContext, createContext } from 'react'
 import MaxUidContext from './MaxUidContext'
 import MinUidContext from './MinUidContext'
-import { UIKitUser } from './RTCConfigure'
+import { UIKitUser } from './PropsContext'
 
 export const LocalContext = createContext<UIKitUser>({} as UIKitUser)
 export const LocalProvider = LocalContext.Provider

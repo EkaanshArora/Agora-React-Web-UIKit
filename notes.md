@@ -1,8 +1,11 @@
 discuss
+- tracks init error
+- TS
+    -   event names, callback fn
+- calling endcall button fn
 - remote mute
 - local mute
-- tracks init
-- TS
+
 
 
 

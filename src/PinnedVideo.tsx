@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { MinUidConsumer } from './MinUidContext'
 import { MaxUidConsumer } from './MaxUidContext'
 import MaxVideoView from './MaxVideoView'
 import MinVideoView from './MinVideoView'
+import PropsContext from './PropsContext'
 
 const PinnedVideo: React.FC = () => {
+  const { styleProps } = useContext(PropsContext)
+  const { minViewContainer } = styleProps || {}
   const parentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)
@@ -58,9 +61,9 @@ const PinnedVideo: React.FC = () => {
           display: 'flex',
           flex: 1,
           flexDirection: isLandscape ? 'column' : 'row',
-          borderStyle: 'solid',
-          borderWidth: 1,
-          borderColor: '#f0f'
+          // borderStyle: 'solid',
+          // borderWidth: 1,
+          // borderColor: '#f0f'
         }}
       >
         <MinUidConsumer>
@@ -68,12 +71,16 @@ const PinnedVideo: React.FC = () => {
             minUsers.map((user) => (
               <div
                 style={{
-                  minHeight: isLandscape ? '35vh' : '99%',
-                  minWidth: isLandscape ? '99%' : '40vw',
-                  borderStyle: 'solid',
-                  borderWidth: 1,
-                  borderColor: '#0ff',
-                  display: 'flex'
+                  ...{
+                    minHeight: isLandscape ? '35vh' : '99%',
+                    minWidth: isLandscape ? '99%' : '40vw',
+                    // borderColor: '#fff',
+                    // borderWidth: 4,
+                    // borderStyle: 'solid',
+                    margin: 2,
+                    display: 'flex'
+                  },
+                  ...minViewContainer
                 }}
                 key={user.uid}
               >

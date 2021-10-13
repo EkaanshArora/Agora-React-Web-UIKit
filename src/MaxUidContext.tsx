@@ -1,5 +1,5 @@
 import React from 'react'
-import { UIKitUser } from './RTCConfigure'
+import { UIKitUser } from './PropsContext'
 
 const MaxUidContext = React.createContext<UIKitUser[]>([])
 

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import RtcContext from './../RtcContext'
 import BtnTemplate from './BtnTemplate'
-import { UIKitUser } from './../RTCConfigure'
+import { UIKitUser } from './../PropsContext'
 
 function SwapUser(props: { UIKitUser: UIKitUser }) {
   const { dispatch } = useContext(RtcContext)

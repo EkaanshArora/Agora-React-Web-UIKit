@@ -3,8 +3,10 @@ import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RtcContext from './RtcContext'
-import { remoteTrackState } from './RTCConfigure'
+import PropsContext, { remoteTrackState } from './PropsContext'
 const GridVideo: React.FC = () => {
+  const { styleProps } = useContext(PropsContext)
+  const { gridVideoCells, gridVideoContainer } = styleProps || {}
   const max = useContext(MaxUidContext)
   const min = useContext(MinUidContext)
   const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
@@ -36,29 +38,32 @@ const GridVideo: React.FC = () => {
     <div
       ref={parentRef}
       style={{
-        width: '100%',
-        height: '100%',
-        display: 'grid',
-        gridTemplateColumns: isLandscape
-          ? users.length > 9
-            ? 'auto auto auto auto'
-            : users.length > 4
+        ...{
+          width: '100%',
+          height: '100%',
+          display: 'grid',
+          gridTemplateColumns: isLandscape
+            ? users.length > 9
+              ? 'auto auto auto auto'
+              : users.length > 4
+              ? 'auto auto auto'
+              : users.length > 1
+              ? 'auto auto'
+              : 'auto'
+            : users.length > 8
             ? 'auto auto auto'
-            : users.length > 1
+            : users.length > 2
             ? 'auto auto'
             : 'auto'
-          : users.length > 8
-          ? 'auto auto auto'
-          : users.length > 2
-          ? 'auto auto'
-          : 'auto'
+        },
+        ...gridVideoContainer
       }}
     >
       {users.map((user) =>
         user.hasVideo === remoteTrackState.subbed ? (
           <AgoraVideoPlayer
             videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
-            style={{ height: '100%', width: '100%' }}
+            style={{ ...{ height: '100%', width: '100%' }, ...gridVideoCells }}
             key={user.uid}
           />
         ) : (

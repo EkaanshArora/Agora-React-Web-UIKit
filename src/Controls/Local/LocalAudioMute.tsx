@@ -2,9 +2,12 @@ import React, { useContext } from 'react'
 import RtcContext, { RtcContextInterface } from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
 import { LocalContext } from '../../LocalUserContext'
-import { UIKitUser } from '../../RTCConfigure'
+import PropsContext, { UIKitUser } from '../../PropsContext'
 
 function LocalAudioMute() {
+  const { styleProps } = useContext(PropsContext)
+  const { localBtnStyles } = styleProps || {}
+  const { muteLocalAudio } = localBtnStyles || {}
   const { dispatch, localAudioTrack } = useContext(RtcContext)
   const local = useContext(LocalContext)
 
@@ -25,6 +28,7 @@ function LocalAudioMute() {
   return (
     <div>
       <BtnTemplate
+        style={muteLocalAudio}
         name={local.hasAudio ? 'mic' : 'micOff'}
         onClick={() => mute(local, dispatch)}
       />

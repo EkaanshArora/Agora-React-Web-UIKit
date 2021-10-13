@@ -1,9 +1,12 @@
 import React, { useContext } from 'react'
 import RtcContext from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
-import { remoteTrackState, UIKitUser } from '../../RTCConfigure'
+import PropsContext, { remoteTrackState, UIKitUser } from '../../PropsContext'
 
 function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
+  const { styleProps } = useContext(PropsContext)
+  const { remoteBtnStyles } = styleProps || {}
+  const { muteRemoteVideo } = remoteBtnStyles || {}
   const { client, dispatch } = useContext(RtcContext)
   const { UIKitUser } = props
   const isDisabled = UIKitUser.hasVideo === remoteTrackState.no
@@ -42,11 +45,17 @@ function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
               ? 'videocam'
               : 'videocamOff'
           }
+          style={muteRemoteVideo}
           onClick={() => mute()}
         />
       </div>
     ) : (
-      <BtnTemplate name='videocam' disabled onClick={() => {}} />
+      <BtnTemplate
+        name='videocam'
+        style={muteRemoteVideo}
+        disabled
+        onClick={() => {}}
+      />
     )
   ) : null
 }

@@ -2,49 +2,62 @@ import React, { useContext, useState } from 'react'
 import RtcContext from './RtcContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
-import { remoteTrackState, UIKitUser } from './RTCConfigure'
 import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
 import SwapUser from './Controls/SwapUser'
+import PropsContext, { remoteTrackState, UIKitUser } from './PropsContext'
+import VideoPlaceholder from './VideoPlaceholder'
 
 const MinVideoView = (props: { user: UIKitUser }) => {
   const { mediaStore } = useContext(RtcContext)
+  const { styleProps } = useContext(PropsContext)
+  const { minViewStyles, videoMode, minViewOverlayContainer } = styleProps || {}
+  const renderModeProp = videoMode?.min
   const [isShown, setIsShown] = useState(false)
   const { user } = props
 
-  return user.hasVideo === remoteTrackState.subbed ? (
+  return (
     <div
+      style={{
+        ...{ display: 'flex', flex: 1 },
+        ...minViewStyles
+      }}
       onMouseEnter={() => setIsShown(true)}
       onMouseLeave={() => setIsShown(false)}
-      style={{ flex: 1, display: 'flex' }}
     >
-      <AgoraVideoPlayer
-        style={{
-          flex: 1,
-          display: 'flex'
-        }}
-        videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
-      />
-      {isShown && (
-        <div style={{ position: 'absolute' }}>
-          <RemoteVideoMute UIKitUser={user} />
-          <RemoteAudioMute UIKitUser={user} />
-          <SwapUser UIKitUser={user} />
+      {user.hasVideo === remoteTrackState.subbed ? (
+        <div
+          style={{
+            ...{ display: 'flex', flex: 1 }
+          }}
+        >
+          <AgoraVideoPlayer
+            style={{ flex: 1, display: 'flex' }}
+            config={{
+              fit: renderModeProp !== undefined ? renderModeProp : 'cover'
+            }}
+            videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
+          />
+          {isShown && (
+            <div
+              style={{
+                ...{
+                  position: 'absolute',
+                  margin: 4,
+                  display: 'flex',
+                  flexDirection: 'row'
+                },
+                ...minViewOverlayContainer
+              }}
+            >
+              <RemoteVideoMute UIKitUser={user} />
+              <RemoteAudioMute UIKitUser={user} />
+              <SwapUser UIKitUser={user} />
+            </div>
+          )}
         </div>
+      ) : (
+        <VideoPlaceholder user={user} isShown={isShown} showButtons showSwap />
       )}
-    </div>
-  ) : (
-    <div
-      key={user.uid}
-      style={{
-        flex: 1,
-        display: 'flex',
-        backgroundColor: 'papayawhip'
-      }}
-    >
-      {/* <p>{user.uid}</p> */}
-      <RemoteVideoMute UIKitUser={user} />
-      <RemoteAudioMute UIKitUser={user} />
-      <SwapUser UIKitUser={user} />
     </div>
   )
 }

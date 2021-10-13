@@ -1,9 +1,12 @@
 import React, { useContext } from 'react'
 import RtcContext from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
-import { remoteTrackState, UIKitUser } from '../../RTCConfigure'
+import PropsContext, { remoteTrackState, UIKitUser } from '../../PropsContext'
 
 function RemoteAudioMute(props: { UIKitUser: UIKitUser }) {
+  const { styleProps } = useContext(PropsContext)
+  const { remoteBtnStyles } = styleProps || {}
+  const { muteRemoteAudio } = remoteBtnStyles || {}
   const { client, dispatch } = useContext(RtcContext)
   const { UIKitUser } = props
   const isDisabled = UIKitUser.hasAudio === remoteTrackState.no
@@ -37,6 +40,7 @@ function RemoteAudioMute(props: { UIKitUser: UIKitUser }) {
     !isDisabled ? (
       <div>
         <BtnTemplate
+          style={muteRemoteAudio}
           name={
             UIKitUser.hasAudio === remoteTrackState.subbed ? 'mic' : 'micOff'
           }
@@ -44,7 +48,12 @@ function RemoteAudioMute(props: { UIKitUser: UIKitUser }) {
         />
       </div>
     ) : (
-      <BtnTemplate name='mic' disabled onClick={() => {}} />
+      <BtnTemplate
+        style={muteRemoteAudio}
+        name='mic'
+        disabled
+        onClick={() => {}}
+      />
     )
   ) : null
 }

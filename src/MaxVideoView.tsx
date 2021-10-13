@@ -2,51 +2,69 @@ import React, { useContext, useState } from 'react'
 import RtcContext from './RtcContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
-import { remoteTrackState, UIKitUser } from './RTCConfigure'
 import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
+import PropsContext, { remoteTrackState, UIKitUser } from './PropsContext'
+import VideoPlaceholder from './VideoPlaceholder'
 
-const VideoAndButtons = (props: { user: UIKitUser }) => {
+const MaxVideoView = (props: { user: UIKitUser }) => {
   const { mediaStore } = useContext(RtcContext)
+  const { styleProps } = useContext(PropsContext)
+  const { maxViewStyles, videoMode, maxViewOverlayContainer } = styleProps || {}
+  const renderModeProp = videoMode?.max
   const [isShown, setIsShown] = useState(false)
   const { user } = props
 
-  return user.hasVideo === remoteTrackState.subbed ? (
+  return (
     <div
       style={{
-        display: 'flex',
-        flex: 1
+        ...{ display: 'flex', flex: 1 },
+        ...maxViewStyles
       }}
       onMouseEnter={() => setIsShown(true)}
       onMouseLeave={() => setIsShown(false)}
     >
-      <AgoraVideoPlayer
-        style={{
-          width: '100%',
-          display: 'flex',
-          flex: 1
-        }}
-        videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
-      />
-      {isShown && (
-        <div style={{ position: 'absolute' }}>
-          <RemoteVideoMute UIKitUser={user} />
-          <RemoteAudioMute UIKitUser={user} />
+      {user.hasVideo === remoteTrackState.subbed ? (
+        <div
+          style={{
+            ...{ display: 'flex', flex: 1 }
+            // ...maxViewStyles
+          }}
+          // onMouseEnter={() => setIsShown(true)}
+          // onMouseLeave={() => setIsShown(false)}
+        >
+          <AgoraVideoPlayer
+            style={{
+              width: '100%',
+              display: 'flex',
+              flex: 1
+            }}
+            config={{
+              fit: renderModeProp || 'cover'
+            }}
+            videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
+          />
+          {isShown && (
+            <div
+              style={{
+                ...{
+                  position: 'absolute',
+                  margin: 5,
+                  flexDirection: 'row',
+                  display: 'flex'
+                },
+                ...maxViewOverlayContainer
+              }}
+            >
+              <RemoteVideoMute UIKitUser={user} />
+              <RemoteAudioMute UIKitUser={user} />
+            </div>
+          )}
         </div>
+      ) : (
+        <VideoPlaceholder user={user} isShown={isShown} showButtons />
       )}
-    </div>
-  ) : (
-    <div
-      key={user.uid}
-      style={{
-        flex: 1,
-        display: 'flex',
-        backgroundColor: 'papayawhip'
-      }}
-    >
-      <RemoteVideoMute UIKitUser={user} />
-      <RemoteAudioMute UIKitUser={user} />
     </div>
   )
 }
 
-export default VideoAndButtons
+export default MaxVideoView

@@ -14,8 +14,15 @@ export const ExampleComponent: React.FunctionComponent = () => {
           channel: 'test',
           // layout: layout.grid
         }}
-        callbacks={{ Endcall: () => setVideocall(false) }}
+        callbacks={{
+          Endcall: () => setVideocall(false),
+          'user-published': (e: any) => console.log('!!!!', e.uid)
+        }}
+        styleProps={{
+          UIKitContainer: { borderWidth: 1, borderStyle: 'solid' }
+        }}
       />
+      <div style={{ flex: 1 }} />
     </div>
   ) : (
     <div onClick={() => setVideocall(true)}>

@@ -13,15 +13,19 @@ import GridVideo from './GridVideo'
  * @param props {@link PropsInterface}
  */
 const AgoraUIKit: React.FC<PropsInterface> = (props) => {
+  const { styleProps } = props
+  const { UIKitContainer } = styleProps || {}
+
   return (
     <PropsProvider value={props}>
       <div
         style={{
-          // width: '100vw',
-          // height: '100vh',
-          display: 'flex',
-          flex: 1,
-          flexDirection: 'column'
+          ...{
+            display: 'flex',
+            flex: 1,
+            flexDirection: 'column'
+          },
+          ...UIKitContainer
         }}
       >
         <RtcConfigure>

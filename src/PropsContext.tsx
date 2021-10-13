@@ -1,5 +1,52 @@
-import { IAgoraRTCClient } from 'agora-rtc-react'
+import {
+  IAgoraRTCClient,
+  VideoPlayerConfig,
+  IRemoteAudioTrack,
+  IRemoteVideoTrack,
+  ILocalVideoTrack,
+  ILocalAudioTrack,
+  UID
+} from 'agora-rtc-react'
 import React from 'react'
+
+interface media {
+  videoTrack?: IRemoteVideoTrack
+  audioTrack?: IRemoteAudioTrack
+}
+interface localMedia {
+  videoTrack?: ILocalVideoTrack
+  audioTrack?: ILocalAudioTrack
+}
+
+export type mediaStore = {
+  [key in UID]: media | localMedia
+}
+
+export enum remoteTrackState {
+  yes = 0, // remote published
+  no = 2, // remote unpublished
+  subbed = 1 // remote published and subscribed
+}
+
+export interface UIKitUser {
+  /**
+   * The ID of the remote user.
+   */
+  uid: UID
+  /**
+   * Whether the remote user is sending an audio track.
+   * - `true`: The remote user is sending an audio track.
+   * - `false`: The remote user is not sending an audio track.
+   */
+  hasAudio: remoteTrackState
+  /**
+   * Whether the remote user is sending a video track.
+   * - `true`: The remote user is sending an audio track.
+   * - `false`: The remote user is not sending an audio track.
+   */
+  hasVideo: remoteTrackState
+}
+
 // // import { StyleProp, ViewStyle } from 'react-native'
 // // import { StreamFallbackOptions, VideoRenderMode } from 'react-native-agora'
 // // import { RtcEngineEvents } from 'react-native-agora/src/common/RtcEvents'
@@ -14,122 +61,130 @@ import React from 'react'
 //   video: boolean
 // }
 
-// /**
-//  * Remote Buttons styles
-//  */
-// interface remoteBtnStylesInterface {
-//   /**
-//    * Style for the remote mute audio button
-//    */
-//   muteRemoteAudio?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the remote mute video button
-//    */
-//   muteRemoteVideo?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the remote swap button in pinned layout
-//    */
-//   remoteSwap?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the overlay close button
-//    */
-//   minCloseBtnStyles?: StyleProp<ViewStyle>
-// }
+/**
+ * Remote Buttons styles
+ */
+interface remoteBtnStylesInterface {
+  /**
+   * Style for the remote mute audio button
+   */
+  muteRemoteAudio?: React.CSSProperties
+  /**
+   * Style for the remote mute video button
+   */
+  muteRemoteVideo?: React.CSSProperties
+  /**
+   * Style for the remote swap button in pinned layout
+   */
+  remoteSwap?: React.CSSProperties
+  /**
+   * Style for the overlay close button
+   */
+  minCloseBtnStyles?: React.CSSProperties
+}
 
-// /**
-//  * Local Buttons styles
-//  */
-// interface localBtnStylesInterface {
-//   /**
-//    * Style for the local mute audio button
-//    */
-//   muteLocalAudio?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the local mute video button
-//    */
-//   muteLocalVideo?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the switch camera button
-//    */
-//   switchCamera?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the end call button
-//    */
-//   endCall?: StyleProp<ViewStyle>
-// }
+/**
+ * Local Buttons styles
+ */
+interface localBtnStylesInterface {
+  /**
+   * Style for the local mute audio button
+   */
+  muteLocalAudio?: React.CSSProperties
+  /**
+   * Style for the local mute video button
+   */
+  muteLocalVideo?: React.CSSProperties
+  /**
+   * Style for the switch camera button
+   */
+  switchCamera?: React.CSSProperties
+  /**
+   * Style for the end call button
+   */
+  endCall?: React.CSSProperties
+}
 
-// /**
-//  * Props object for customising the UI Kit, takes in react native styling
-//  */
-// export interface StylePropInterface {
-//   /**
-//    * Sets the scaling of the video
-//    */
-//   videoMode?: {
-//     max?: VideoRenderMode
-//     min?: VideoRenderMode
-//   }
-//   /**
-//    * Color tint for icons
-//    */
-//   theme?: string
-//   /**
-//    * Color tint for icons
-//    */
-//   iconSize?: number
-//   /**
-//    * Custom base64 string for icon
-//    */
-//   customIcon?: Partial<IconsInterface>
-//   /**
-//    * Globals style for the local buttons (except end call)
-//    */
-//   BtnTemplateStyles?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the big view in pinned layout
-//    */
-//   maxViewStyles?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the small view in pinned layout
-//    */
-//   minViewStyles?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the small view container
-//    */
-//   minViewContainer?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the overlay on small user view when pressed in pinned layout
-//    */
-//   overlayContainer?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the remote button
-//    */
-//   remoteBtnStyles?: remoteBtnStylesInterface
-//   /**
-//    * Style for the remote button container
-//    */
-//   remoteBtnContainer?: StyleProp<ViewStyle>
-//   /**
-//    * Style for specific local buttons, overrides the style applied by BtnTemplateStyles prop
-//    */
-//   localBtnStyles?: localBtnStylesInterface
-//   /**
-//    * Style for the local button container
-//    */
-//   localBtnContainer?: StyleProp<ViewStyle>
-//   /**
-//    * Style for the button container that sets the mute and unmute for maxVideoView in pinned layout, only visible if max view is remote user
-//    */
-//   maxViewRemoteBtnContainer?: StyleProp<ViewStyle>
-//   /**
-//    * Applies style to the individual cell (view) containing the video in the grid layout
-//    */
-//   gridVideoView?: StyleProp<ViewStyle>
-//   /**
-//    * Applies style to the global view containing the UI Kit
-//    */
-//   UIKitContainer?: StyleProp<ViewStyle>
-// }
+/**
+ * Props object for customising the UI Kit, takes in react native styling
+ */
+export interface StylePropInterface {
+  /**
+   * Sets the scaling of the video
+   */
+  videoMode?: {
+    max?: VideoPlayerConfig['fit']
+    min?: VideoPlayerConfig['fit']
+  }
+  /**
+   * Color tint for icons
+   */
+  theme?: string
+  /**
+   * Color tint for icons
+   */
+  iconSize?: number
+  /**
+   * Custom base64 string for icon
+   */
+  customIcon?: Partial<IconsInterface>
+  /**
+   * Globals style for the local buttons (except end call)
+   */
+  BtnTemplateStyles?: React.CSSProperties
+  /**
+   * Style for the big view in pinned layout
+   */
+  maxViewStyles?: React.CSSProperties
+  /**
+   * Style for the small view in pinned layout
+   */
+  minViewStyles?: React.CSSProperties
+  /**
+   * Style for the small view container
+   */
+  minViewContainer?: React.CSSProperties
+  /**
+   * Style for the overlay on small user view when pressed in pinned layout
+   */
+  minViewOverlayContainer?: React.CSSProperties
+  /**
+   * Style for the overlay on small user view when pressed in pinned layout
+   */
+  maxViewOverlayContainer?: React.CSSProperties
+  /**
+   * Style for the remote button
+   */
+  remoteBtnStyles?: remoteBtnStylesInterface
+  /**
+   * Style for the remote button container
+   */
+  remoteBtnContainer?: React.CSSProperties
+  /**
+   * Style for specific local buttons, overrides the style applied by BtnTemplateStyles prop
+   */
+  localBtnStyles?: localBtnStylesInterface
+  /**
+   * Style for the local button container
+   */
+  localBtnContainer?: React.CSSProperties
+  // /**
+  //  * Style for the button container that sets the mute and unmute for maxVideoView in pinned layout, only visible if max view is remote user
+  //  */
+  // maxViewRemoteBtnContainer?: React.CSSProperties
+  /**
+   * Applies style to the individual cell (view) containing the video in the grid layout
+   */
+  gridVideoCells?: React.CSSProperties
+  /**
+   * Applies style to the individual cell (view) containing the video in the grid layout
+   */
+  gridVideoContainer?: React.CSSProperties
+  /**
+   * Applies style to the global view containing the UI Kit
+   */
+  UIKitContainer?: React.CSSProperties
+}
 
 // /**
 //  * Props object for customising the UI Kit functionality
@@ -307,10 +362,11 @@ export interface PropsInterface {
   /**
    * Props used to customise the UI Kit's appearance (accepts style object for different components)
    */
-  // styleProps?: Partial<StylePropInterface>
+  styleProps?: Partial<StylePropInterface>
   // /**
   //  * Callbacks for different functions of the UI Kit
   //  */
+  // !!!! fix type
   callbacks?: any
 }
 

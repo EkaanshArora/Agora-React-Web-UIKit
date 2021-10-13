@@ -6,7 +6,12 @@ import React, {
   useReducer
 } from 'react'
 import { RtcProvider } from './RtcContext'
-import PropsContext, { RtcPropsInterface } from './PropsContext'
+import PropsContext, {
+  RtcPropsInterface,
+  UIKitUser,
+  remoteTrackState,
+  mediaStore
+} from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
 import {
   createClient,
@@ -14,49 +19,9 @@ import {
   ILocalAudioTrack,
   createMicrophoneAndCameraTracks,
   UID,
-  IAgoraRTCClient,
-  IRemoteAudioTrack,
-  IRemoteVideoTrack
+  IAgoraRTCClient
 } from 'agora-rtc-react'
 import { MinUidProvider } from './MinUidContext'
-
-interface media {
-  videoTrack?: IRemoteVideoTrack
-  audioTrack?: IRemoteAudioTrack
-}
-interface localMedia {
-  videoTrack?: ILocalVideoTrack
-  audioTrack?: ILocalAudioTrack
-}
-
-export type mediaStore = {
-  [key in UID]: media | localMedia
-}
-
-export enum remoteTrackState {
-  yes = 0, // remote published
-  no = 2, // remote unpublished
-  subbed = 1 // remote published and subscribed
-}
-
-export interface UIKitUser {
-  /**
-   * The ID of the remote user.
-   */
-  uid: UID
-  /**
-   * Whether the remote user is sending an audio track.
-   * - `true`: The remote user is sending an audio track.
-   * - `false`: The remote user is not sending an audio track.
-   */
-  hasAudio: remoteTrackState
-  /**
-   * Whether the remote user is sending a video track.
-   * - `true`: The remote user is sending an audio track.
-   * - `false`: The remote user is not sending an audio track.
-   */
-  hasVideo: remoteTrackState
-}
 
 const useClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
 const useTracks = createMicrophoneAndCameraTracks(
@@ -66,6 +31,36 @@ const useTracks = createMicrophoneAndCameraTracks(
 
 // type x = IAgoraRTCClient['on']
 // type y = Parameters<x>
+// // have an array of events
+// const a = ['on', 'off', 'once', 'emit'] as const
+
+//! !!!! fix type
+type events =
+  | 'connection-state-change'
+  | 'user-joined'
+  | 'user-left'
+  | 'user-published'
+  | 'user-unpublished'
+  | 'user-info-updated'
+  | 'media-reconnect-start'
+  | 'media-reconnect-end'
+  | 'stream-type-changed'
+  | 'stream-fallback'
+  | 'channel-media-relay-state'
+  | 'channel-media-relay-event'
+  | 'volume-indicator'
+  | 'crypt-error'
+  | 'token-privilege-will-expire'
+  | 'token-privilege-did-expire'
+  | 'network-quality'
+  | 'live-streaming-error'
+  | 'live-streaming-warning'
+  | 'stream-inject-status'
+  | 'exception'
+  | 'is-using-cloud-proxy'
+interface callbacks {
+  (event: events): (args: any) => void
+}
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   const { callbacks, rtcProps } = useContext(PropsContext)
@@ -110,7 +105,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       dispatch({ type: 'update-user-video', value: tracks })
     } else if (error) {
       console.error(error)
-      // console.log(ready)
       // setReady(false)
     }
     return () => {
@@ -435,10 +429,10 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     }
     console.log(callbacks, callbacks[action.type])
 
-    if (callbacks && callbacks[action.type]) {
-      callbacks[action.type].apply(null, action.value)
-      console.log('callback executed', callbacks, callbacks[action.type])
-    }
+    // if (callbacks && callbacks[action.type]) {
+    //   callbacks[action.type].apply(null, action.value)
+    //   console.log('callback executed', callbacks[action.type])
+    // }
 
     console.log('!state-update', { ...state, ...stateUpdate }, stateUpdate)
     return { ...state, ...stateUpdate }
@@ -527,6 +521,16 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             value: args
           })
         })
+
+        const events = Object.keys(callbacks as callbacks)
+        // for () {
+        events.map((e) => {
+          console.log('!!!!', e, callbacks[e])
+          client.on(e, (...args: any[]) => {
+            callbacks[e].apply(null, args)
+          })
+        })
+        // }
         ;(joinRes as (arg0: boolean) => void)(true)
         setReady(true)
       } catch (e) {
@@ -588,7 +592,12 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     async function join(): Promise<void> {
       await canJoin.current
       if (client) {
-        const uid = await client.join(rtcProps.appId, rtcProps.channel, null, 0)
+        const uid = await client.join(
+          rtcProps.appId,
+          rtcProps.channel,
+          rtcProps.token || null,
+          rtcProps.uid || 0
+        )
         console.log('!uid', uid)
       } else {
         console.error('trying to join before RTC Engine was initialized')

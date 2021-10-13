@@ -2,9 +2,12 @@ import React, { useContext } from 'react'
 import RtcContext, { RtcContextInterface } from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
 import { LocalContext } from '../../LocalUserContext'
-import { UIKitUser } from '../../RTCConfigure'
+import PropsContext, { UIKitUser } from '../../PropsContext'
 
 function LocalVideoMute() {
+  const { styleProps } = useContext(PropsContext)
+  const { localBtnStyles } = styleProps || {}
+  const { muteLocalVideo } = localBtnStyles || {}
   const { dispatch, localVideoTrack } = useContext(RtcContext)
   const local = useContext(LocalContext)
 
@@ -25,6 +28,7 @@ function LocalVideoMute() {
   return (
     <div>
       <BtnTemplate
+        style={muteLocalVideo}
         name={local.hasVideo ? 'videocam' : 'videocamOff'}
         onClick={() => mute(local, dispatch)}
       />
