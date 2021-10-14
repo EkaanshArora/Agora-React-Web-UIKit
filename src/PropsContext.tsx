@@ -5,7 +5,8 @@ import {
   IRemoteVideoTrack,
   ILocalVideoTrack,
   ILocalAudioTrack,
-  UID
+  UID,
+  RemoteStreamFallbackType
 } from 'agora-rtc-react'
 import React from 'react'
 
@@ -218,15 +219,25 @@ export interface RtcPropsInterface {
    * Once set to true, the UI Kit attempts to join the channel. Can be set to false to initialise the SDK and wait before joining the channel. (default: true)
    */
   callActive?: boolean
+  /**
+   * Pass in a custom RTC client, to use your own implementation of the AgoraRTCClient.
+   */
   customRtcClient?: IAgoraRTCClient
-  // enableDualStream?: boolean;
   // /**
-  //  * Enables dual stream mode. (default: false)
+  //  * Pass in a customs tracks
   //  */
+  // customTracks?: {
+  //   video?: ILocalVideoTrack
+  //   audio?: ILocalAudioTrack
+  // }
+  /**
+   * Enables dual stream mode. (default: false)
+   */
+  enableDualStream?: boolean
   /**
    * Enable dual stream mode with selected fallback option. (default: disabled)
    */
-  // dualStreamMode?: StreamFallbackOptions
+  dualStreamMode?: RemoteStreamFallbackType
   /**
    * Choose between grid layout and pinned layout. (default: pinned layout)
    */

@@ -28,7 +28,7 @@ const AgoraUIKit: React.FC<PropsInterface> = (props) => {
           ...UIKitContainer
         }}
       >
-        <RtcConfigure>
+        <RtcConfigure callActive={props.rtcProps.callActive}>
           {props.rtcProps?.layout === layout.grid ? (
             <GridVideo />
           ) : (

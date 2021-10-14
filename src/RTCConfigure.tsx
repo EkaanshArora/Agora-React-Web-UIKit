@@ -1,3 +1,20 @@
+// mode
+// role
+// enableAudio
+// enableVideo
+// tokenUrl
+// screenshare
+// custom tracks
+// -activeSpeaker -----
+// -dualStreamMode -----
+// -callActive -----
+
+// appId -----
+// channel -----
+// layout -----
+// token -----
+// uid -----
+
 import React, {
   useState,
   useEffect,
@@ -10,7 +27,8 @@ import PropsContext, {
   RtcPropsInterface,
   UIKitUser,
   remoteTrackState,
-  mediaStore
+  mediaStore,
+  layout
 } from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
 import {
@@ -34,7 +52,7 @@ const useTracks = createMicrophoneAndCameraTracks(
 // // have an array of events
 // const a = ['on', 'off', 'once', 'emit'] as const
 
-//! !!!! fix type
+// !!!!! fix type
 type events =
   | 'connection-state-change'
   | 'user-joined'
@@ -63,6 +81,7 @@ interface callbacks {
 }
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
+  const uid = useRef<UID>()
   const { callbacks, rtcProps } = useContext(PropsContext)
   const [ready, setReady] = useState<boolean>(false)
   const [channelJoined, setChannelJoined] = useState<boolean>(false)
@@ -87,7 +106,8 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     useState<ILocalVideoTrack | null>(null)
   const [localAudioTrack, setLocalAudioTrack] =
     useState<ILocalAudioTrack | null>(null)
-
+  let localVideoTrackHasPublished = false
+  let localAudioTrackHasPublished = false
   const { ready: trackReady, tracks, error } = useTracks()
 
   const mediaStore = useRef<mediaStore>({})
@@ -117,6 +137,14 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     }
   }, [trackReady, error]) //, ready])
 
+  useEffect(() => {
+    if (channelJoined && rtcProps.token) {
+      client
+        .renewToken(rtcProps.token)
+        .then((e) => console.log('renewed token', e))
+    }
+  }, [rtcProps.token, channelJoined])
+
   let { callActive } = props
   if (callActive === undefined) {
     callActive = true
@@ -124,18 +152,16 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   const reducer = (
     state: stateType,
-    // !!!!!! fix this type b: any
+    // !!!!!! fix type b: any
     action: React.ReducerAction<(a: stateType, b: any) => stateType>
   ) => {
-    // !!!!!! fix this type
+    // !!!!!! fix type
     let stateUpdate: Partial<stateType> = initState
     const uids: UID[] = [...state.max, ...state.min].map(
       (u: UIKitUser) => u.uid
     )
-    console.log('!UIDs', uids)
     switch (action.type) {
       case 'update-user-video':
-        console.log('!update-user-video', action.value[1], true)
         stateUpdate = {
           min: state.min.map((user: UIKitUser) => {
             if (user.uid === 0) {
@@ -426,6 +452,25 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       case 'leave-channel':
         stateUpdate = initState
         break
+      case 'ActiveSpeaker':
+        if (state.max[0].uid === action.value[0]) {
+          stateUpdate = { ...state }
+        } else {
+          stateUpdate = {
+            max: [
+              state.min.find(
+                (user) => user.uid === action.value[0]
+              ) as UIKitUser
+            ],
+            min: [
+              ...state.min.filter(
+                (user: UIKitUser) => user.uid !== action.value[0]
+              ),
+              state.max[0]
+            ]
+          }
+        }
+        break
     }
     console.log(callbacks, callbacks[action.type])
 
@@ -481,6 +526,13 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               if (mediaType === 'audio') {
                 // eslint-disable-next-line no-unused-expressions
                 remoteUser.audioTrack?.play()
+              } else {
+                if (props.enableDualStream && props.dualStreamMode) {
+                  client.setStreamFallbackOption(
+                    remoteUser.uid,
+                    props.dualStreamMode
+                  )
+                }
               }
               dispatch({
                 type: 'user-published',
@@ -525,7 +577,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         const events = Object.keys(callbacks as callbacks)
         // for () {
         events.map((e) => {
-          console.log('!!!!', e, callbacks[e])
           client.on(e, (...args: any[]) => {
             callbacks[e].apply(null, args)
           })
@@ -557,23 +608,81 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   useEffect(() => {
     async function publish() {
-      let pubRes
-      if (localVideoTrack && localAudioTrack && channelJoined) {
-        console.log(
-          '!pub',
-          localVideoTrack,
-          localAudioTrack,
-          pubRes,
-          callActive
-        )
-        pubRes = await client.publish([localAudioTrack, localVideoTrack])
+      if (props.enableDualStream) {
+        await client.enableDualStream()
+      }
+      // handle publish fail if track is not enabled
+      if (localAudioTrack?.enabled && channelJoined) {
+        if (!localAudioTrackHasPublished) {
+          await client.publish([localAudioTrack]).then(() => {
+            localAudioTrackHasPublished = true
+          })
+        }
+      }
+      if (localVideoTrack?.enabled && channelJoined) {
+        if (!localVideoTrackHasPublished) {
+          await client.publish([localVideoTrack]).then(() => {
+            localVideoTrackHasPublished = true
+          })
+        }
       }
     }
     console.log('!pub', localVideoTrack, localAudioTrack, callActive)
     if (callActive) {
       publish()
     }
-  }, [callActive, localVideoTrack, localAudioTrack, channelJoined])
+  }, [
+    callActive,
+    localVideoTrack?.enabled,
+    localAudioTrack?.enabled,
+    channelJoined
+  ])
+
+  useEffect(() => {
+    async function enableActiveSpeaker() {
+      if (rtcProps.activeSpeaker && rtcProps.layout !== layout.grid) {
+        client.on('volume-indicator', (volumes) => {
+          const highestvolumeObj = volumes.reduce(
+            (
+              highestVolume: {
+                level: number
+                uid: UID
+              },
+              volume
+            ) => {
+              if (highestVolume === null) {
+                return volume
+              } else {
+                if (volume.level > highestVolume.level) {
+                  return volume
+                }
+                return highestVolume
+              }
+            },
+            null
+          )
+          const activeSpeaker = highestvolumeObj
+            ? highestvolumeObj.uid
+            : undefined
+          const mapActiveSpeakerToZero =
+            activeSpeaker === uid.current ? 0 : activeSpeaker
+          if (activeSpeaker !== undefined) {
+            dispatch({
+              type: 'ActiveSpeaker',
+              value: [mapActiveSpeakerToZero]
+            })
+          }
+        })
+        await client.enableAudioVolumeIndicator()
+      }
+    }
+    if (callActive) {
+      enableActiveSpeaker()
+    }
+    return () => {
+      client.removeAllListeners('volume-indicator')
+    }
+  }, [rtcProps.activeSpeaker, rtcProps.layout])
 
   // mute function???
   // useEffect(() => {
@@ -592,7 +701,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     async function join(): Promise<void> {
       await canJoin.current
       if (client) {
-        const uid = await client.join(
+        uid.current = await client.join(
           rtcProps.appId,
           rtcProps.channel,
           rtcProps.token || null,
@@ -617,13 +726,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           .catch((err: unknown) => console.log(err))
       }
     }
-  }, [
-    rtcProps.channel,
-    rtcProps.uid,
-    rtcProps.token,
-    callActive,
-    rtcProps.tokenUrl
-  ])
+  }, [rtcProps.channel, rtcProps.uid, callActive, rtcProps.tokenUrl])
 
   return (
     <RtcProvider
