@@ -6,5 +6,6 @@
 
 ## How to use
 - Instal Node.js LTS
+- Add your Agora App ID to `/example/src/App.tsx`
 - Run `npm start` to start the bundler
 - Run `cd example && npm start` to run the example app
