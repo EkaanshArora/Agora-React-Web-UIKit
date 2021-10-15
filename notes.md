@@ -1,3 +1,25 @@
+TODO:
+- Bundle CSS with UIKit
+- Fix remote controls scrolling position (refactor into component)
+- Live Streaming (mode/role)
+- Optional (enableAudio/enableVideo)
+- Support for tokenUrl
+- Add screenshare
+- Support for custom tracks
+
+Supported:
+- activeSpeaker
+- dualStreamMode
+- callActive (can be used for precall)
+- auto renew tokens
+- use custom rtc client
+- grid/pinned layout
+- auto resize layouts (portrait/landscape)
+- video placeholder
+- recompose the app
+- join using appId, channel, uid, token
+_____________________________
+
 discuss
 - tracks init error
 - TS

@@ -1,20 +1,3 @@
-// mode
-// role
-// enableAudio
-// enableVideo
-// tokenUrl
-// screenshare
-// custom tracks
-// -activeSpeaker -----
-// -dualStreamMode -----
-// -callActive -----
-
-// appId -----
-// channel -----
-// layout -----
-// token -----
-// uid -----
-
 import React, {
   useState,
   useEffect,
@@ -42,6 +25,7 @@ import {
 import { MinUidProvider } from './MinUidContext'
 
 const useClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
+// const useScreenClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
 const useTracks = createMicrophoneAndCameraTracks(
   { encoderConfig: {} },
   { encoderConfig: {} }
@@ -79,9 +63,16 @@ type events =
 interface callbacks {
   (event: events): (args: any) => void
 }
+// interface ScreenStream {
+//   audio?: ILocalAudioTrack
+//   video?: ILocalVideoTrack
+// }
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   const uid = useRef<UID>()
+  // let inScreenshare = false
+  // let screenStream: ScreenStream = {}
+  // const screenClient = useScreenClient()
   const { callbacks, rtcProps } = useContext(PropsContext)
   const [ready, setReady] = useState<boolean>(false)
   const [channelJoined, setChannelJoined] = useState<boolean>(false)
@@ -471,6 +462,48 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           }
         }
         break
+      // if (action.value[0] === undefined) {
+      //   stateUpdate = { ...state }
+      // } else {
+      //   if (uid.current === undefined) {
+      //     stateUpdate = { ...state }
+      //   } else if (
+      //     uid.current === action.value[0] &&
+      //     state.max[0].uid === 0
+      //   ) {
+      //     stateUpdate = { ...state }
+      //   } else if (uid.current === action.value[0]) {
+      //     stateUpdate = {
+      //       max: [state.min.find((user) => user.uid === 0) as UIKitUser],
+      //       min: [
+      //         ...state.min.filter((user: UIKitUser) => user.uid !== 0),
+      //         state.max[0]
+      //       ]
+      //     }
+      //   } else {
+      //     if (action.value[0] !== undefined) {
+      //       if (state.max[0].uid !== action.value[0]) {
+      //         stateUpdate = {
+      //           max: [
+      //             state.min.find(
+      //               (user) => user.uid === action.value[0]
+      //             ) as UIKitUser
+      //           ],
+      //           min: [
+      //             ...state.min.filter(
+      //               (user: UIKitUser) => user.uid !== action.value[0]
+      //             ),
+      //             state.max[0]
+      //           ]
+      //         }
+      //       } else {
+      //         stateUpdate = { ...state }
+      //       }
+      //     } else {
+      //       stateUpdate = { ...state }
+      //     }
+      //   }
+      // }
     }
     console.log(callbacks, callbacks[action.type])
 
@@ -517,6 +550,12 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           // Get current peer IDs
           const [remoteUser, mediaType] = args
           console.log('!user-published', remoteUser.uid)
+          // if (screenClient.uid === remoteUser.uid) {
+          //   dispatch({
+          //     type: 'user-published',
+          //     value: args
+          //   })
+          // } else {
           client
             .subscribe(remoteUser, mediaType)
             .then((e) => {
@@ -540,6 +579,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               })
             })
             .catch((e) => console.log(e))
+          // }
         })
 
         client.on('user-unpublished', async (...args) => {
@@ -727,6 +767,75 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       }
     }
   }, [rtcProps.channel, rtcProps.uid, callActive, rtcProps.tokenUrl])
+
+  // const isSingleTrack = (
+  //   x: ILocalVideoTrack | [ILocalVideoTrack, ILocalAudioTrack]
+  // ): x is ILocalVideoTrack => {
+  //   if ((x as [ILocalVideoTrack, ILocalAudioTrack]).length) {
+  //     return false
+  //   } else {
+  //     return true
+  //   }
+  // }
+  // const startScreenshare = async (): Promise<void> => {
+  //   if (!inScreenshare) {
+  //     try {
+  //       console.log('[screenshare]: creating stream')
+  //       const screenTracks = await AgoraRTC.createScreenVideoTrack({})
+  //       if (isSingleTrack(screenTracks)) {
+  //         screenStream.video = screenTracks
+  //       } else {
+  //         screenStream.video = screenTracks[0]
+  //         screenStream.audio = screenTracks[1]
+  //       }
+  //     } catch (e) {
+  //       console.log('[screenshare]: Error during intialization');
+  //       throw e
+  //     }
+
+  //     await screenClient.join(
+  //       rtcProps.appId,
+  //       rtcProps.channel,
+  //       rtcProps.token || null,
+  //       0
+  //       // rtcProps.uid || 0
+  //     )
+
+  //     inScreenshare = true
+  //     await screenClient.publish(
+  //       screenStream.audio
+  //         ? [screenStream.video, screenStream.audio]
+  //         : screenStream.video,
+  //     )
+
+  //     screenStream.video.on('track-ended', () => {
+  //       // dispatch({ type: 'screenshare-ended', action: [] })
+
+  //       screenClient.leave()
+  //       // eslint-disable-next-line no-unused-expressions
+  //       screenStream.audio?.close()
+  //       // eslint-disable-next-line no-unused-expressions
+  //       screenStream.video?.close()
+  //       screenStream = {}
+
+  //       inScreenshare = false
+  //     })
+  //   } else {
+  //     // dispatch({ type: 'screenshare-ended', action: [] })
+  //     screenClient.leave()
+  //     try {
+  //       // eslint-disable-next-line no-unused-expressions
+  //       screenStream.audio?.close()
+  //       // eslint-disable-next-line no-unused-expressions
+  //       screenStream.video?.close()
+  //       screenStream = {}
+  //     } catch (err) {
+  //       console.log(err)
+  //       throw err
+  //     }
+  //     inScreenshare = false
+  //   }
+  // }
 
   return (
     <RtcProvider

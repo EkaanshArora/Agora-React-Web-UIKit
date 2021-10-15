@@ -1,11 +1,30 @@
-import React from 'react'
-import { ExampleComponent } from 'agora-react-uikit'
-// import 'agora-react-uikit/dist/index.css'
+import React, { useState } from 'react'
+import AgoraUIKit
+// , { layout }
+from 'agora-react-uikit'
 
-const App = () => {
-  return <div style={{ height: '100vh', display: 'flex' }}>
-    {/* <div style={{ flex: 1, display: 'flex' }}></div> */}
-    <ExampleComponent /></div>
+const App: React.FunctionComponent = () => {
+  const [videocall, setVideocall] = useState(true)
+
+  return (
+    <div style={{width: '100vw', height: '100vh', display: 'flex'}}>
+      {videocall ? (
+          <AgoraUIKit
+            rtcProps={{
+              appId: '',
+              channel: 'test',
+              // layout: layout.grid
+            }}
+            callbacks={{
+              Endcall: () => setVideocall(false)
+            }}
+          />
+      ) : (
+          <h1 style={{cursor: 'pointer'}} onClick={() => setVideocall(true)}>start call</h1>
+      )}
+    </div>
+  )
 }
+
 
 export default App
