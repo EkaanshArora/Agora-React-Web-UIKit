@@ -61,7 +61,12 @@ const MaxVideoView = (props: { user: UIKitUser }) => {
           )}
         </div>
       ) : (
-        <VideoPlaceholder user={user} isShown={isShown} showButtons />
+        <VideoPlaceholder
+          user={user}
+          isShown={isShown}
+          showButtons
+          isMaxVideo
+        />
       )}
     </div>
   )

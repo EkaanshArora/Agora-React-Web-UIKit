@@ -27,11 +27,11 @@ const MinVideoView = (props: { user: UIKitUser }) => {
       {user.hasVideo === remoteTrackState.subbed ? (
         <div
           style={{
-            ...{ display: 'flex', flex: 1 }
+            ...{ display: 'flex', flex: 1, backgroundColor: '#007bffcc' }
           }}
         >
           <AgoraVideoPlayer
-            style={{ flex: 1, display: 'flex' }}
+            style={{ flex: 10, display: 'flex' }}
             config={{
               fit: renderModeProp !== undefined ? renderModeProp : 'cover'
             }}
@@ -41,10 +41,10 @@ const MinVideoView = (props: { user: UIKitUser }) => {
             <div
               style={{
                 ...{
-                  position: 'absolute',
                   margin: 4,
+                  flex: 1,
                   display: 'flex',
-                  flexDirection: 'row'
+                  flexDirection: 'column'
                 },
                 ...minViewOverlayContainer
               }}
