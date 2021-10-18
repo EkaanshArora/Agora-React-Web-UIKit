@@ -187,10 +187,25 @@ export interface StylePropInterface {
   UIKitContainer?: React.CSSProperties
 }
 
-// /**
-//  * Props object for customising the UI Kit functionality
-//  */
+/**
+ * Props for the VideoPlaceholder component
+ */
+export interface VideoPlaceholderProps {
+  user: UIKitUser
+  isShown: boolean
+  showButtons?: boolean
+  showSwap?: boolean
+  isMaxVideo?: boolean
+}
+
+/**
+ * Props object for customising the UI Kit functionality
+ */
 export interface RtcPropsInterface {
+  /**
+   * React functional component for overriding the default video placeholder
+   */
+  CustomVideoPlaceholder?: React.FunctionComponent<VideoPlaceholderProps>
   /**
    * Agora App ID - used to authenticate the request
    */

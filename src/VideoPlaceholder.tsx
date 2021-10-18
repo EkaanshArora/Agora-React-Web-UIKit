@@ -1,21 +1,16 @@
 import React, { useContext } from 'react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
 import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
-import PropsContext, { UIKitUser } from './PropsContext'
+import PropsContext, { VideoPlaceholderProps } from './PropsContext'
 import SwapUser from './Controls/SwapUser'
 
-const VideoPlaceholder = (props: {
-  user: UIKitUser
-  isShown: boolean
-  showButtons?: boolean
-  showSwap?: boolean
-  isMaxVideo?: boolean
-}) => {
-  const { styleProps } = useContext(PropsContext)
+const VideoPlaceholder = (props: VideoPlaceholderProps) => {
+  const { styleProps, rtcProps } = useContext(PropsContext)
   const { maxViewStyles, maxViewOverlayContainer } = styleProps || {}
   const { user, isMaxVideo } = props
+  const { CustomVideoPlaceholder } = rtcProps
 
-  return (
+  return !CustomVideoPlaceholder ? (
     <div
       key={user.uid}
       style={{
@@ -75,6 +70,8 @@ const VideoPlaceholder = (props: {
         </div>
       )}
     </div>
+  ) : (
+    CustomVideoPlaceholder && CustomVideoPlaceholder({ ...props }, null)
   )
 }
 
