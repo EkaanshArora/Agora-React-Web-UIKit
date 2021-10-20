@@ -1,20 +1,14 @@
 import React, { useContext } from 'react'
-// import { View } from 'react-native'
-// import styles from './Style'
 import EndCall from './Local/EndCall'
 import LocalAudioMute from './Local/LocalAudioMute'
 import LocalVideoMute from './Local/LocalVideoMute'
-// import SwitchCamera from './Local/SwitchCamera'
-// import RemoteControls from './RemoteControls'
-// import { MaxUidConsumer } from './MaxUidContext'
-// import PropsContext from './PropsContext'
 import LocalUserContextComponent from '../LocalUserContext'
 import PropsContext from '../PropsContext'
 
-function Controls() {
+function LocalControls() {
   const { styleProps } = useContext(PropsContext)
   const { localBtnContainer } = styleProps || {}
-  // const showButton = props.showButton !== undefined ? props.showButton : true
+
   return (
     <LocalUserContextComponent>
       <div
@@ -40,4 +34,4 @@ function Controls() {
   )
 }
 
-export default Controls
+export default LocalControls
