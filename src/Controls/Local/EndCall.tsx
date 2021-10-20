@@ -13,13 +13,7 @@ function EndCall() {
     <BtnTemplate
       style={endCall || { backgroundColor: '#ef5588', borderColor: '#f00' }}
       name='callEnd'
-      onClick={() =>
-        // dispatch({
-        //   type: 'Endcall',
-        //   value: []
-        // })
-        callbacks.Endcall()
-      }
+      onClick={() => callbacks?.EndCall && callbacks.EndCall()}
     />
   )
 }

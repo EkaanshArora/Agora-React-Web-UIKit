@@ -11,7 +11,7 @@ function SwapUser(props: { UIKitUser: UIKitUser }) {
     <div>
       <BtnTemplate
         name='remoteSwap'
-        onClick={() => dispatch({ type: 'user-swap', value: UIKitUser })}
+        onClick={() => dispatch({ type: 'user-swap', value: [UIKitUser] })}
       />
     </div>
   )

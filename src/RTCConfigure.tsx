@@ -5,13 +5,15 @@ import React, {
   useRef,
   useReducer
 } from 'react'
-import { RtcProvider } from './RtcContext'
+import { ActionType, RtcProvider } from './RtcContext'
 import PropsContext, {
   RtcPropsInterface,
   UIKitUser,
   remoteTrackState,
   mediaStore,
-  layout
+  layout,
+  CallbacksInterface,
+  RemoteUIKitUser
 } from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
 import {
@@ -23,6 +25,7 @@ import {
   IAgoraRTCClient
 } from 'agora-rtc-react'
 import { MinUidProvider } from './MinUidContext'
+import { actionTypeGuard } from './Utils/actionTypeGuard'
 
 const useClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
 // const useScreenClient = createClient({ codec: 'vp8', mode: 'rtc' }) // pass in another client if use h264
@@ -30,43 +33,6 @@ const useTracks = createMicrophoneAndCameraTracks(
   { encoderConfig: {} },
   { encoderConfig: {} }
 )
-
-// type x = IAgoraRTCClient['on']
-// type y = Parameters<x>
-// // have an array of events
-// const a = ['on', 'off', 'once', 'emit'] as const
-
-// !!!!! fix type
-type events =
-  | 'connection-state-change'
-  | 'user-joined'
-  | 'user-left'
-  | 'user-published'
-  | 'user-unpublished'
-  | 'user-info-updated'
-  | 'media-reconnect-start'
-  | 'media-reconnect-end'
-  | 'stream-type-changed'
-  | 'stream-fallback'
-  | 'channel-media-relay-state'
-  | 'channel-media-relay-event'
-  | 'volume-indicator'
-  | 'crypt-error'
-  | 'token-privilege-will-expire'
-  | 'token-privilege-did-expire'
-  | 'network-quality'
-  | 'live-streaming-error'
-  | 'live-streaming-warning'
-  | 'stream-inject-status'
-  | 'exception'
-  | 'is-using-cloud-proxy'
-interface callbacks {
-  (event: events): (args: any) => void
-}
-// interface ScreenStream {
-//   audio?: ILocalAudioTrack
-//   video?: ILocalVideoTrack
-// }
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   const uid = useRef<UID>()
@@ -143,322 +109,338 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   const reducer = (
     state: stateType,
-    // !!!!!! fix type b: any
-    action: React.ReducerAction<(a: stateType, b: any) => stateType>
+    action: ActionType<keyof CallbacksInterface>
   ) => {
-    // !!!!!! fix type
     let stateUpdate: Partial<stateType> = initState
     const uids: UID[] = [...state.max, ...state.min].map(
       (u: UIKitUser) => u.uid
     )
     switch (action.type) {
       case 'update-user-video':
-        stateUpdate = {
-          min: state.min.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: remoteTrackState.subbed,
-                hasVideo: remoteTrackState.subbed
+        if (actionTypeGuard(action, action.type)) {
+          stateUpdate = {
+            min: state.min.map((user: UIKitUser) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: remoteTrackState.subbed,
+                  hasVideo: remoteTrackState.subbed
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          }),
-          max: state.max.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: remoteTrackState.subbed,
-                hasVideo: remoteTrackState.subbed
+            }),
+            max: state.max.map((user: UIKitUser) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: remoteTrackState.subbed,
+                  hasVideo: remoteTrackState.subbed
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          })
+            })
+          }
         }
         break
       case 'user-joined':
-        if (uids.indexOf(action.value[0].uid) === -1) {
-          const minUpdate: stateType['min'] = [
-            ...state.min,
-            {
-              uid: action.value[0].uid,
-              hasAudio: remoteTrackState.no,
-              hasVideo: remoteTrackState.no
+        if (actionTypeGuard(action, action.type)) {
+          if (uids.indexOf(action.value[0].uid) === -1) {
+            const minUpdate: stateType['min'] = [
+              ...state.min,
+              {
+                uid: action.value[0].uid,
+                hasAudio: remoteTrackState.no,
+                hasVideo: remoteTrackState.no
+              }
+            ]
+            if (minUpdate.length === 1 && state.max[0].uid === 0) {
+              stateUpdate = {
+                max: minUpdate,
+                min: state.max
+              }
+            } else {
+              stateUpdate = {
+                min: minUpdate,
+                max: state.max
+              }
             }
-          ]
-          if (minUpdate.length === 1 && state.max[0].uid === 0) {
-            stateUpdate = {
-              max: minUpdate,
-              min: state.max
-            }
-          } else {
-            stateUpdate = {
-              min: minUpdate,
-              max: state.max
-            }
+            console.log('new user joined!\n', action.value[0].uid)
           }
-          console.log('new user joined!\n', action.value[0].uid)
         }
         break
       case 'user-unpublished':
-        if (state.max[0].uid === action.value[0].uid) {
-          stateUpdate = {
-            max: [
-              {
-                uid: action.value[0].uid,
-                hasAudio:
-                  action.value[1] === 'audio'
-                    ? remoteTrackState.no
-                    : state.max[0].hasAudio,
-                hasVideo:
-                  action.value[1] === 'video'
-                    ? remoteTrackState.no
-                    : state.max[0].hasVideo
-              }
-            ],
-            min: state.min
-          }
-        } else {
-          const UIKitUser = state.min.find(
-            (user: UIKitUser) => user.uid === action.value[0].uid
-          )
-          if (UIKitUser) {
-            const minUpdate: stateType['min'] = [
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value[0].uid
-              ),
-              {
-                uid: action.value[0].uid,
-                hasAudio:
-                  action.value[1] === 'audio'
-                    ? remoteTrackState.no
-                    : UIKitUser.hasAudio,
-                hasVideo:
-                  action.value[1] === 'video'
-                    ? remoteTrackState.no
-                    : UIKitUser.hasVideo
-              }
-            ]
+        if (actionTypeGuard(action, action.type)) {
+          if (state.max[0].uid === action.value[0].uid) {
             stateUpdate = {
-              min: minUpdate,
-              max: state.max
+              max: [
+                {
+                  uid: action.value[0].uid,
+                  hasAudio:
+                    action.value[1] === 'audio'
+                      ? remoteTrackState.no
+                      : (state.max[0].hasAudio as remoteTrackState),
+                  hasVideo:
+                    action.value[1] === 'video'
+                      ? remoteTrackState.no
+                      : (state.max[0].hasVideo as remoteTrackState)
+                }
+              ],
+              min: state.min
+            }
+          } else {
+            const UIKitUser = state.min.find(
+              (user: UIKitUser) => user.uid === action.value[0].uid
+            )
+            if (UIKitUser) {
+              const minUpdate: stateType['min'] = [
+                ...state.min.filter(
+                  (user: UIKitUser) => user.uid !== action.value[0].uid
+                ),
+                {
+                  uid: action.value[0].uid,
+                  hasAudio:
+                    action.value[1] === 'audio'
+                      ? remoteTrackState.no
+                      : (UIKitUser.hasAudio as remoteTrackState),
+                  hasVideo:
+                    action.value[1] === 'video'
+                      ? remoteTrackState.no
+                      : (UIKitUser.hasVideo as remoteTrackState)
+                }
+              ]
+              stateUpdate = {
+                min: minUpdate,
+                max: state.max
+              }
             }
           }
+          console.log(
+            '!user unpublished',
+            action.value[0].uid,
+            action.value[1],
+            action.value[0].hasAudio,
+            action.value[0].hasVideo
+          )
         }
-        console.log(
-          '!user unpublished',
-          action.value[0].uid,
-          action.value[1],
-          action.value[0].hasAudio,
-          action.value[0].hasVideo
-        )
         break
       case 'user-published':
-        if (state.max[0].uid === action.value[0].uid) {
-          stateUpdate = {
-            max: [
-              {
-                uid: action.value[0].uid,
-                hasAudio:
-                  action.value[1] === 'audio'
-                    ? remoteTrackState.subbed
-                    : state.max[0].hasAudio,
-                hasVideo:
-                  action.value[1] === 'video'
-                    ? remoteTrackState.subbed
-                    : state.max[0].hasVideo
-              }
-            ],
-            min: state.min
-          }
-        } else {
-          stateUpdate = {
-            min: state.min.map((user) => {
-              if (user.uid !== action.value[0].uid) {
-                return user
-              } else {
-                return {
-                  uid: user.uid,
+        if (actionTypeGuard(action, action.type)) {
+          if (state.max[0].uid === action.value[0].uid) {
+            stateUpdate = {
+              max: [
+                {
+                  uid: action.value[0].uid,
                   hasAudio:
                     action.value[1] === 'audio'
                       ? remoteTrackState.subbed
-                      : user.hasAudio,
+                      : (state.max[0].hasAudio as remoteTrackState),
                   hasVideo:
                     action.value[1] === 'video'
                       ? remoteTrackState.subbed
-                      : user.hasVideo
+                      : (state.max[0].hasVideo as remoteTrackState)
                 }
-              }
-            }),
-            max: state.max
+              ],
+              min: state.min
+            }
+          } else {
+            stateUpdate = {
+              min: state.min.map((user) => {
+                if (user.uid !== action.value[0].uid) {
+                  return user
+                } else {
+                  return {
+                    uid: user.uid,
+                    hasAudio:
+                      action.value[1] === 'audio'
+                        ? remoteTrackState.subbed
+                        : (user.hasAudio as remoteTrackState),
+                    hasVideo:
+                      action.value[1] === 'video'
+                        ? remoteTrackState.subbed
+                        : (user.hasVideo as remoteTrackState)
+                  }
+                }
+              }),
+              max: state.max
+            }
           }
+          console.log(
+            '!user published',
+            action.value[0].uid,
+            action.value[0].videoTrack,
+            action.value[0].hasVideo
+          )
         }
-        console.log(
-          '!user published',
-          action.value[0].uid,
-          action.value[0].videoTrack,
-          action.value[0].hasVideo
-        )
         break
       case 'user-left':
-        if (state.max[0].uid === action.value[0].uid) {
-          const minUpdate = [...state.min]
-          stateUpdate = {
-            max: [minUpdate.pop() as UIKitUser],
-            min: minUpdate
-          }
-        } else {
-          stateUpdate = {
-            min: state.min.filter((user) => user.uid !== action.value[0].uid),
-            max: state.max
+        if (actionTypeGuard(action, action.type)) {
+          if (state.max[0].uid === action.value[0].uid) {
+            const minUpdate = [...state.min]
+            stateUpdate = {
+              max: [minUpdate.pop() as UIKitUser],
+              min: minUpdate
+            }
+          } else {
+            stateUpdate = {
+              min: state.min.filter((user) => user.uid !== action.value[0].uid),
+              max: state.max
+            }
           }
         }
         break
       case 'user-swap':
-        if (state.max[0].uid === action.value.uid) {
-        } else {
-          stateUpdate = {
-            max: [action.value],
-            min: [
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value.uid
-              ),
-              state.max[0]
-            ]
+        if (actionTypeGuard(action, action.type)) {
+          if (state.max[0].uid === action.value[0].uid) {
+          } else {
+            stateUpdate = {
+              max: [action.value[0]],
+              min: [
+                ...state.min.filter(
+                  (user: UIKitUser) => user.uid !== action.value[0].uid
+                ),
+                state.max[0]
+              ]
+            }
           }
         }
         break
       case 'local-user-mute-video':
-        stateUpdate = {
-          min: state.min.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: user.hasAudio,
-                hasVideo: action.value
-                  ? remoteTrackState.subbed
-                  : remoteTrackState.yes
+        if (actionTypeGuard(action, action.type)) {
+          stateUpdate = {
+            min: state.min.map((user: UIKitUser) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: user.hasAudio as boolean,
+                  hasVideo: action.value[0]
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          }),
-          max: state.max.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: user.hasAudio,
-                hasVideo: action.value
-                  ? remoteTrackState.subbed
-                  : remoteTrackState.yes
+            }),
+            max: state.max.map((user: UIKitUser) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: user.hasAudio as boolean,
+                  hasVideo: action.value[0]
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          })
+            })
+          }
         }
         break
       case 'local-user-mute-audio':
-        stateUpdate = {
-          min: state.min.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: action.value,
-                hasVideo: user.hasVideo
+        if (actionTypeGuard(action, action.type)) {
+          stateUpdate = {
+            min: state.min.map((user) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: action.value[0],
+                  hasVideo: user.hasVideo as boolean
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          }),
-          max: state.max.map((user: UIKitUser) => {
-            if (user.uid === 0) {
-              return {
-                uid: 0,
-                hasAudio: action.value,
-                hasVideo: user.hasVideo
+            }),
+            max: state.max.map((user) => {
+              if (user.uid === 0) {
+                return {
+                  uid: 0,
+                  hasAudio: action.value[0],
+                  hasVideo: user.hasVideo as boolean
+                }
+              } else {
+                return user
               }
-            } else {
-              return user
-            }
-          })
+            })
+          }
         }
         break
       case 'remote-user-mute-video':
-        // window['track'] = action.value.videoTrack
-        // window['client'] = client
-        stateUpdate = {
-          min: state.min.map((user: UIKitUser) => {
-            if (user.uid === action.value[0].uid)
-              return {
-                uid: user.uid,
-                hasVideo: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
-                hasAudio: user.hasAudio
-              }
-            else return user
-          }),
-          max: state.max.map((user: UIKitUser) => {
-            if (user.uid === action.value[0].uid)
-              return {
-                uid: user.uid,
-                hasVideo: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
-                hasAudio: user.hasAudio
-              }
-            else return user
-          })
+        if (actionTypeGuard(action, action.type)) {
+          // window['track'] = action.value.videoTrack
+          // window['client'] = client
+          stateUpdate = {
+            min: state.min.map((user: UIKitUser) => {
+              if (user.uid === action.value[0].uid) {
+                return {
+                  uid: user.uid,
+                  hasVideo: action.value[1]
+                    ? remoteTrackState.yes
+                    : remoteTrackState.subbed,
+                  hasAudio: user.hasAudio
+                } as RemoteUIKitUser
+              } else return user
+            }),
+            max: state.max.map((user: UIKitUser) => {
+              if (user.uid === action.value[0].uid)
+                return {
+                  uid: user.uid,
+                  hasVideo: action.value[1]
+                    ? remoteTrackState.yes
+                    : remoteTrackState.subbed,
+                  hasAudio: user.hasAudio
+                } as RemoteUIKitUser
+              else return user
+            })
+          }
         }
         break
       case 'remote-user-mute-audio':
-        stateUpdate = {
-          min: state.min.map((user: UIKitUser) => {
-            if (user.uid === action.value[0].uid)
-              return {
-                uid: user.uid,
-                hasAudio: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
-                hasVideo: user.hasVideo
-              }
-            else return user
-          }),
-          max: state.max.map((user: UIKitUser) => {
-            if (user.uid === action.value[0].uid)
-              return {
-                uid: user.uid,
-                hasAudio: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
-                hasVideo: user.hasVideo
-              }
-            else return user
-          })
+        if (actionTypeGuard(action, action.type)) {
+          stateUpdate = {
+            min: state.min.map((user: UIKitUser) => {
+              if (user.uid === action.value[0].uid)
+                return {
+                  uid: user.uid,
+                  hasAudio: action.value[1]
+                    ? remoteTrackState.yes
+                    : remoteTrackState.subbed,
+                  hasVideo: user.hasVideo
+                } as RemoteUIKitUser
+              else return user
+            }),
+            max: state.max.map((user: UIKitUser) => {
+              if (user.uid === action.value[0].uid)
+                return {
+                  uid: user.uid,
+                  hasAudio: action.value[1]
+                    ? remoteTrackState.yes
+                    : remoteTrackState.subbed,
+                  hasVideo: user.hasVideo
+                } as RemoteUIKitUser
+              else return user
+            })
+          }
         }
         break
       case 'leave-channel':
         stateUpdate = initState
         break
       case 'ActiveSpeaker':
-        if (state.max[0].uid === action.value[0]) {
-          stateUpdate = { ...state }
-        } else {
-          stateUpdate = {
-            max: [
-              state.min.find(
-                (user) => user.uid === action.value[0]
-              ) as UIKitUser
-            ],
-            min: [
-              ...state.min.filter(
-                (user: UIKitUser) => user.uid !== action.value[0]
-              ),
-              state.max[0]
-            ]
+        if (actionTypeGuard(action, action.type)) {
+          if (state.max[0].uid === action.value[0]) {
+            stateUpdate = { ...state }
+          } else {
+            stateUpdate = {
+              max: [
+                state.min.find(
+                  (user) => user.uid === action.value[0]
+                ) as UIKitUser
+              ],
+              min: [
+                ...state.min.filter(
+                  (user: UIKitUser) => user.uid !== action.value[0]
+                ),
+                state.max[0]
+              ]
+            }
           }
         }
         break
@@ -505,7 +487,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       //   }
       // }
     }
-    console.log(callbacks, callbacks[action.type])
+    // console.log(callbacks, callbacks[action.type])
 
     // if (callbacks && callbacks[action.type]) {
     //   callbacks[action.type].apply(null, action.value)
@@ -614,14 +596,43 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           })
         })
 
-        const events = Object.keys(callbacks as callbacks)
-        // for () {
-        events.map((e) => {
-          client.on(e, (...args: any[]) => {
-            callbacks[e].apply(null, args)
-          })
-        })
+        // if (props.tokenUrl) {
+        //   const { tokenUrl, channel, uid } = props
+
+        //   client.on('token-privilege-will-expire', async () => {
+        //     const res = await fetch(
+        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0)
+        //     )
+        //     const data = await res.json()
+        //     const token = data.rtcToken
+        //     client.renewToken(token)
+        //   })
+
+        //   client.on('token-privilege-did-expire', async () => {
+        //     const res = await fetch(
+        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0)
+        //     )
+        //     const data = await res.json()
+        //     const token = data.rtcToken
+        //     client.renewToken(token)
+        //   })
         // }
+
+        if (callbacks) {
+          const events: [keyof CallbacksInterface] = Object.keys(
+            callbacks
+          ) as any
+          // !!!! fix type, validate event
+          events.map((e) => {
+            try {
+              client.on(e, (...args: any[]) => {
+                ;(callbacks[e] as Function).apply(null, args)
+              })
+            } catch (e) {
+              console.log(e)
+            }
+          })
+        }
         ;(joinRes as (arg0: boolean) => void)(true)
         setReady(true)
       } catch (e) {
@@ -740,13 +751,29 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   useEffect(() => {
     async function join(): Promise<void> {
       await canJoin.current
+      // const { tokenUrl, channel, uid: userUid, appId, token } = rtcProps
       if (client) {
+        // if (tokenUrl) {
+        //   try {
+        //     const res = await fetch(
+        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (userUid || 0)
+        //     )
+        //     console.log('!!', res)
+        //     const data = await res.json()
+        //     const token = data.rtcToken
+        //     console.log('!!', data, token)
+        //     uid.current = await client.join(appId, channel, token, userUid || 0)
+        //   } catch (e) {
+        //     console.log('!!', e)
+        //   }
+        // } else {
         uid.current = await client.join(
           rtcProps.appId,
           rtcProps.channel,
           rtcProps.token || null,
           rtcProps.uid || 0
         )
+        // }
         console.log('!uid', uid)
       } else {
         console.error('trying to join before RTC Engine was initialized')

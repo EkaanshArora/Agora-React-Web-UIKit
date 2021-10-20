@@ -27,7 +27,7 @@ const MinVideoView = (props: { user: UIKitUser }) => {
       {user.hasVideo === remoteTrackState.subbed ? (
         <div
           style={{
-            ...{ display: 'flex', flex: 1, backgroundColor: '#007bffcc' }
+            ...{ display: 'flex', flex: 1, backgroundColor: '#007bff33' }
           }}
         >
           <AgoraVideoPlayer

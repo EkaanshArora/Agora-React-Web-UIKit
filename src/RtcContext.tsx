@@ -2,10 +2,9 @@ import React from 'react'
 import {
   IAgoraRTCClient,
   ILocalAudioTrack,
-  ILocalVideoTrack,
-  IAgoraRTCRemoteUser
+  ILocalVideoTrack
 } from 'agora-rtc-react'
-import { mediaStore } from './PropsContext'
+import { CallbacksInterface, mediaStore } from './PropsContext'
 
 export interface UidInterface {
   // TODO: refactor local to 0 and remove string.
@@ -19,29 +18,31 @@ export interface UidStateInterface {
   max: Array<UidInterface>
 }
 
+export type DispatchType = <
+  T extends keyof CallbacksInterface,
+  V extends Parameters<CallbacksInterface[T]>
+>(action: {
+  type: T
+  value: V
+}) => void
+
 export interface RtcContextInterface {
   client: IAgoraRTCClient
   localVideoTrack: ILocalVideoTrack | null
   localAudioTrack: ILocalAudioTrack | null
   mediaStore: mediaStore
-  dispatch: React.Dispatch<{
-    type:
-      | 'user-published'
-      | 'user-left'
-      | 'mute-local-video'
-      | 'local-user-mute-video'
-      | 'local-user-mute-audio'
-      | 'remote-user-mute-video'
-      | 'remote-user-mute-audio'
-      | 'user-swap'
-      | 'Endcall'
-    value: IAgoraRTCRemoteUser | any
-  }>
+  dispatch: DispatchType
 }
 
 const RtcContext = React.createContext<RtcContextInterface>(
   {} as RtcContextInterface
 )
+
+export interface ActionInterface<T extends keyof CallbacksInterface> {
+  type: T
+  value: Parameters<CallbacksInterface[T]>
+}
+export type ActionType<T extends keyof CallbacksInterface> = ActionInterface<T>
 
 export const RtcProvider = RtcContext.Provider
 export const RtcConsumer = RtcContext.Consumer

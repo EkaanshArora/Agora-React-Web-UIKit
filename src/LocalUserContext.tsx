@@ -1,9 +1,9 @@
 import React, { useContext, createContext } from 'react'
 import MaxUidContext from './MaxUidContext'
 import MinUidContext from './MinUidContext'
-import { UIKitUser } from './PropsContext'
+import { LocalUIKitUser } from './PropsContext'
 
-export const LocalContext = createContext<UIKitUser>({} as UIKitUser)
+export const LocalContext = createContext<LocalUIKitUser>({} as LocalUIKitUser)
 export const LocalProvider = LocalContext.Provider
 export const LocalConsumer = LocalContext.Consumer
 
@@ -16,11 +16,11 @@ const LocalUserContext: React.FC<LocalUserContextInterface> = (props) => {
   const min = useContext(MinUidContext)
   // if(min && min[0] && max )
   // const localUser: UIKitUser = max[0].uid === 0 ? max[0] : min[0]
-  let localUser: UIKitUser
+  let localUser: LocalUIKitUser
   if (max[0].uid === 0) {
-    localUser = max[0]
+    localUser = max[0] as LocalUIKitUser
   } else {
-    localUser = min.find((u) => u.uid === 0) as UIKitUser
+    localUser = min.find((u) => u.uid === 0) as LocalUIKitUser
   }
   console.log(localUser.uid)
   return (

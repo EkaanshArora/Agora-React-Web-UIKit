@@ -6,7 +6,18 @@ import {
   ILocalVideoTrack,
   ILocalAudioTrack,
   UID,
-  RemoteStreamFallbackType
+  RemoteStreamFallbackType,
+  ConnectionState,
+  ConnectionDisconnectedReason,
+  IAgoraRTCRemoteUser,
+  RemoteStreamType,
+  ChannelMediaRelayState,
+  ChannelMediaRelayError,
+  ChannelMediaRelayEvent,
+  NetworkQuality,
+  AgoraRTCError,
+  IMicrophoneAudioTrack,
+  ICameraVideoTrack
 } from 'agora-rtc-react'
 import React from 'react'
 
@@ -25,11 +36,30 @@ export type mediaStore = {
 
 export enum remoteTrackState {
   yes = 0, // remote published
-  no = 2, // remote unpublished
-  subbed = 1 // remote published and subscribed
+  subbed = 1, // remote published and subscribed
+  no = 2 // remote unpublished
 }
 
-export interface UIKitUser {
+export type UIKitUser = RemoteUIKitUser | LocalUIKitUser
+export interface LocalUIKitUser {
+  /**
+   * The ID of the remote user.
+   */
+  uid: 0
+  /**
+   * Whether the remote user is sending an audio track.
+   * - `true`: The remote user is sending an audio track.
+   * - `false`: The remote user is not sending an audio track.
+   */
+  hasAudio: boolean
+  /**
+   * Whether the remote user is sending a video track.
+   * - `true`: The remote user is sending an audio track.
+   * - `false`: The remote user is not sending an audio track.
+   */
+  hasVideo: boolean
+}
+export interface RemoteUIKitUser {
   /**
    * The ID of the remote user.
    */
@@ -318,68 +348,78 @@ export enum layout {
 //    */
 //   LiveBroadcasting = 1
 // }
-
-// export interface CustomCallbacksInterface {
-//   /**
-//    * Callback for EndCall
-//    */
-//   EndCall(): void
-//   /**
-//    * Callback for SwitchCamera
-//    */
-//   SwitchCamera(): void
-//   /**
-//    * Callback for when a user swaps video in pinned layout
-//    */
-//   SwapVideo(user: UidInterface): void
-//   /**
-//    * Callback for when a user mutes a remote user's audio
-//    */
-//   UserMuteRemoteAudio(user: UidInterface, muted: UidInterface['audio']): void
-//   /**
-//    * Callback for when a user mutes a remote user's video
-//    */
-//   UserMuteRemoteVideo(user: UidInterface, muted: UidInterface['video']): void
-//   /**
-//    * Callback for when a user mutes their audio
-//    */
-//   LocalMuteAudio(muted: boolean): void
-//   /**
-//    * Callback for when a user mutes their video
-//    */
-//   LocalMuteVideo(muted: boolean): void
-// }
-
-// export interface RtcWebEvents {
-//   event:
-//     | 'connection-state-change'
-//     | 'user-joined'
-//     | 'user-left'
-//     | 'user-published'
-//     | 'user-unpublished'
-//     | 'user-info-updated'
-//     | 'media-reconnect-start'
-//     | 'media-reconnect-end'
-//     | 'stream-type-changed'
-//     | 'stream-fallback'
-//     | 'channel-media-relay-state'
-//     | 'channel-media-relay-event'
-//     | 'volume-indicator'
-//     | 'crypt-error'
-//     | 'token-privilege-will-expire'
-//     | 'token-privilege-did-expire'
-//     | 'network-quality'
-//     | 'live-streaming-error'
-//     | 'live-streaming-warning'
-//     | 'stream-inject-status'
-//     | 'exception'
-//     | 'is-using-cloud-proxy'
-// }
-
-// export interface CallbacksInterface
-//   extends RtcWebEvents,
-//     CustomCallbacksInterface {}
-
+export type CallbacksInterface = UIKitEventsInterface & RtcEventsInterface
+export interface UIKitEventsInterface {
+  EndCall(): void
+  ActiveSpeaker(uid: UID): void
+  ['update-user-video'](
+    tracks: [IMicrophoneAudioTrack, ICameraVideoTrack]
+  ): void
+  ['user-swap'](user: UIKitUser): void
+  ['local-user-mute-video'](status: boolean): void
+  ['local-user-mute-audio'](status: boolean): void
+  ['remote-user-mute-video'](user: UIKitUser, status: remoteTrackState): void
+  ['remote-user-mute-audio'](user: UIKitUser, status: remoteTrackState): void
+  ['leave-channel'](): void
+}
+export interface RtcEventsInterface {
+  ['connection-state-change'](
+    curState: ConnectionState,
+    revState: ConnectionState,
+    reason?: ConnectionDisconnectedReason
+  ): void
+  ['user-joined'](user: IAgoraRTCRemoteUser): void
+  ['user-left'](user: IAgoraRTCRemoteUser, reason: string): void
+  ['user-published'](
+    user: IAgoraRTCRemoteUser,
+    mediaType: 'audio' | 'video'
+  ): void
+  ['user-unpublished'](
+    user: IAgoraRTCRemoteUser,
+    mediaType: 'audio' | 'video'
+  ): void
+  ['user-info-updated'](
+    uid: UID,
+    msg:
+      | 'mute-audio'
+      | 'mute-video'
+      | 'enable-local-video'
+      | 'unmute-audio'
+      | 'unmute-video'
+      | 'disable-local-video'
+  ): void
+  ['media-reconnect-start'](uid: UID, streamType: RemoteStreamType): void
+  ['media-reconnect-end'](uid: UID, streamType: RemoteStreamType): void
+  ['stream-type-changed'](uid: UID, streamType: RemoteStreamType): void
+  ['stream-fallback'](
+    uid: UID,
+    isFallbackOrRecover: 'fallback' | 'recover'
+  ): void
+  ['channel-media-relay-state'](
+    state: ChannelMediaRelayState,
+    code: ChannelMediaRelayError
+  ): void
+  ['channel-media-relay-event'](event: ChannelMediaRelayEvent): void
+  ['volume-indicator'](
+    result: {
+      level: number
+      uid: UID
+    }[]
+  ): void
+  ['crypt-error'](): void
+  ['token-privilege-will-expire'](): void
+  ['token-privilege-did-expire'](): void
+  ['network-quality'](stats: NetworkQuality): void
+  ['live-streaming-error'](url: string, err: AgoraRTCError): void
+  ['live-streaming-warning'](url: string, warning: AgoraRTCError): void
+  ['stream-inject-status'](
+    status: InjectStreamEventStatus,
+    uid: UID,
+    url: string
+  ): void
+  // [exception](): void
+  ['is-using-cloud-proxy'](isUsingProxy: boolean): void
+}
 export interface PropsInterface {
   /**
    * Props used to customise the UI Kit's functionality
@@ -392,8 +432,7 @@ export interface PropsInterface {
   // /**
   //  * Callbacks for different functions of the UI Kit
   //  */
-  // !!!! fix type
-  callbacks?: any
+  callbacks?: Partial<CallbacksInterface>
 }
 
 // /**
@@ -445,5 +484,49 @@ const PropsContext = React.createContext<PropsInterface>(initialValue)
 
 export const PropsProvider = PropsContext.Provider
 export const PropsConsumer = PropsContext.Consumer
+
+declare const enum InjectStreamEventStatus {
+  /**
+   * Successfully injects the online media stream.
+   */
+  INJECT_STREAM_STATUS_START_SUCCESS = 0,
+  /**
+   * The online media stream already exists.
+   */
+  INJECT_STREAM_STATUS_START_ALREADY_EXISTS = 1,
+  /**
+   * Injecting the online media stream is not authorized.
+   */
+  INJECT_STREAM_STATUS_START_UNAUTHORIZED = 2,
+  /**
+   * Timeout when injecting the online media stream.
+   */
+  INJECT_STREAM_STATUS_START_TIMEOUT = 3,
+  /**
+   * Fails to inject the online media stream.
+   */
+  INJECT_STREAM_STATUS_START_FAILED = 4,
+  /**
+   * Succeessfully stops injecting the online media stream.
+   */
+  INJECT_STREAM_STATUS_STOP_SUCCESS = 5,
+  /**
+   * Fails to find the online media stream.
+   */
+  INJECT_STREAM_STATUS_STOP_NOT_FOUND = 6,
+  /**
+   * Stopping injecting the online media stream is not authorized.
+   */
+  INJECT_STREAM_STATUS_STOP_UNAUTHORIZED = 7,
+  /**
+   * Timeout when stopping the online media stream.
+   */
+  INJECT_STREAM_STATUS_STOP_TIMEOUT = 8,
+  INJECT_STREAM_STATUS_STOP_FAILED = 9,
+  /**
+   * The online media stream is corrupted.
+   */
+  INJECT_STREAM_STATUS_BROKEN = 10
+}
 
 export default PropsContext
