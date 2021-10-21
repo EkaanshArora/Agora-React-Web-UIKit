@@ -13,7 +13,8 @@ import PropsContext, {
   mediaStore,
   layout,
   CallbacksInterface,
-  RemoteUIKitUser
+  RemoteUIKitUser,
+  ToggleState
 } from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
 import {
@@ -313,7 +314,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               if (user.uid === 0) {
                 return {
                   uid: 0,
-                  hasAudio: user.hasAudio as boolean,
+                  hasAudio: user.hasAudio as ToggleState,
                   hasVideo: action.value[0]
                 }
               } else {
@@ -324,7 +325,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               if (user.uid === 0) {
                 return {
                   uid: 0,
-                  hasAudio: user.hasAudio as boolean,
+                  hasAudio: user.hasAudio as ToggleState,
                   hasVideo: action.value[0]
                 }
               } else {
@@ -342,7 +343,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
                 return {
                   uid: 0,
                   hasAudio: action.value[0],
-                  hasVideo: user.hasVideo as boolean
+                  hasVideo: user.hasVideo as ToggleState
                 }
               } else {
                 return user
@@ -353,7 +354,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
                 return {
                   uid: 0,
                   hasAudio: action.value[0],
-                  hasVideo: user.hasVideo as boolean
+                  hasVideo: user.hasVideo as ToggleState
                 }
               } else {
                 return user
@@ -399,9 +400,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               if (user.uid === action.value[0].uid)
                 return {
                   uid: user.uid,
-                  hasAudio: action.value[1]
-                    ? remoteTrackState.yes
-                    : remoteTrackState.subbed,
+                  hasAudio: action.value[1],
                   hasVideo: user.hasVideo
                 } as RemoteUIKitUser
               else return user
@@ -410,9 +409,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
               if (user.uid === action.value[0].uid)
                 return {
                   uid: user.uid,
-                  hasAudio: action.value[1]
-                    ? remoteTrackState.yes
-                    : remoteTrackState.subbed,
+                  hasAudio: action.value[1],
                   hasVideo: user.hasVideo
                 } as RemoteUIKitUser
               else return user

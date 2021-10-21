@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import RtcContext, { DispatchType } from '../../RtcContext'
 import BtnTemplate from '../BtnTemplate'
 import { LocalContext } from '../../LocalUserContext'
-import PropsContext, { LocalUIKitUser } from '../../PropsContext'
+import PropsContext, { LocalUIKitUser, ToggleState } from '../../PropsContext'
 
 function LocalAudioMute() {
   const { styleProps } = useContext(PropsContext)
@@ -13,14 +13,39 @@ function LocalAudioMute() {
 
   const mute = async (user: LocalUIKitUser, dispatch: DispatchType) => {
     if (user.uid === 0) {
-      const status = user.hasAudio
-      // eslint-disable-next-line no-unused-expressions
-      localAudioTrack
-        ?.setEnabled(!status)
-        .then(() =>
-          dispatch({ type: 'local-user-mute-audio', value: [!status] })
-        )
-        .catch((e) => console.log(e))
+      const localState = user.hasAudio
+      if (
+        localState === ToggleState.enabled ||
+        localState === ToggleState.disabled
+      ) {
+        // Disable UI
+        dispatch({
+          type: 'local-user-mute-audio',
+          value: [
+            localState === ToggleState.enabled
+              ? ToggleState.disabling
+              : ToggleState.enabling
+          ]
+        })
+        try {
+          await localAudioTrack?.setEnabled(localState !== ToggleState.enabled)
+          console.log('!!muted audio', localState)
+          // Enable UI
+          dispatch({
+            type: 'local-user-mute-audio',
+            value: [
+              localState === ToggleState.enabled
+                ? ToggleState.disabled
+                : ToggleState.enabled
+            ]
+          })
+        } catch (e) {
+          dispatch({
+            type: 'local-user-mute-audio',
+            value: [localState]
+          })
+        }
+      }
     }
   }
 
@@ -28,7 +53,7 @@ function LocalAudioMute() {
     <div>
       <BtnTemplate
         style={muteLocalAudio}
-        name={local.hasAudio ? 'mic' : 'micOff'}
+        name={local.hasAudio === ToggleState.enabled ? 'mic' : 'micOff'}
         onClick={() => mute(local, dispatch)}
       />
     </div>

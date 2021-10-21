@@ -51,13 +51,13 @@ export interface LocalUIKitUser {
    * - `true`: The remote user is sending an audio track.
    * - `false`: The remote user is not sending an audio track.
    */
-  hasAudio: boolean
+  hasAudio: ToggleState
   /**
    * Whether the remote user is sending a video track.
    * - `true`: The remote user is sending an audio track.
    * - `false`: The remote user is not sending an audio track.
    */
-  hasVideo: boolean
+  hasVideo: ToggleState
 }
 export interface RemoteUIKitUser {
   /**
@@ -348,6 +348,14 @@ export enum layout {
 //    */
 //   LiveBroadcasting = 1
 // }
+
+export enum ToggleState {
+  disabled, // set as 0 - to evaluate falsy
+  enabled, // set as 1 - to evaluate truthy
+  disabling, // enabled -> disabling -> disabled
+  enabling // disabled -> enabling -> enabled
+}
+
 export type CallbacksInterface = UIKitEventsInterface & RtcEventsInterface
 export interface UIKitEventsInterface {
   EndCall(): void
@@ -356,8 +364,8 @@ export interface UIKitEventsInterface {
     tracks: [IMicrophoneAudioTrack, ICameraVideoTrack]
   ): void
   ['user-swap'](user: UIKitUser): void
-  ['local-user-mute-video'](status: boolean): void
-  ['local-user-mute-audio'](status: boolean): void
+  ['local-user-mute-video'](status: ToggleState): void
+  ['local-user-mute-audio'](status: ToggleState): void
   ['remote-user-mute-video'](user: UIKitUser, status: remoteTrackState): void
   ['remote-user-mute-audio'](user: UIKitUser, status: remoteTrackState): void
   ['leave-channel'](): void

@@ -6,18 +6,6 @@ import {
 } from 'agora-rtc-react'
 import { CallbacksInterface, mediaStore } from './PropsContext'
 
-export interface UidInterface {
-  // TODO: refactor local to 0 and remove string.
-  uid: number | string
-  audio: boolean
-  video: boolean
-}
-
-export interface UidStateInterface {
-  min: Array<UidInterface>
-  max: Array<UidInterface>
-}
-
 export type DispatchType = <
   T extends keyof CallbacksInterface,
   V extends Parameters<CallbacksInterface[T]>

@@ -4,7 +4,7 @@ import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
 import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
 import SwapUser from './Controls/SwapUser'
-import PropsContext, { remoteTrackState, UIKitUser } from './PropsContext'
+import PropsContext, { UIKitUser } from './PropsContext'
 import VideoPlaceholder from './VideoPlaceholder'
 
 const MinVideoView = (props: { user: UIKitUser }) => {
@@ -24,7 +24,7 @@ const MinVideoView = (props: { user: UIKitUser }) => {
       onMouseEnter={() => setIsShown(true)}
       onMouseLeave={() => setIsShown(false)}
     >
-      {user.hasVideo === remoteTrackState.subbed ? (
+      {user.hasVideo === 1 ? (
         <div
           style={{
             ...{ display: 'flex', flex: 1, backgroundColor: '#007bff33' }

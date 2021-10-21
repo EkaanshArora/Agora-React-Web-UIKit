@@ -3,10 +3,13 @@ import RtcContext from './RtcContext'
 import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
 import RemoteVideoMute from './Controls/Remote/RemoteVideoMute'
 import RemoteAudioMute from './Controls/Remote/RemoteAudioMute'
-import PropsContext, { remoteTrackState, UIKitUser } from './PropsContext'
+import PropsContext, { UIKitUser } from './PropsContext'
 import VideoPlaceholder from './VideoPlaceholder'
 
-const MaxVideoView = (props: { user: UIKitUser }) => {
+const MaxVideoView = (props: {
+  user: UIKitUser
+  style?: React.CSSProperties
+}) => {
   const { mediaStore } = useContext(RtcContext)
   const { styleProps } = useContext(PropsContext)
   const { maxViewStyles, videoMode, maxViewOverlayContainer } = styleProps || {}
@@ -18,19 +21,17 @@ const MaxVideoView = (props: { user: UIKitUser }) => {
     <div
       style={{
         ...{ display: 'flex', flex: 1 },
+        ...props.style,
         ...maxViewStyles
       }}
       onMouseEnter={() => setIsShown(true)}
       onMouseLeave={() => setIsShown(false)}
     >
-      {user.hasVideo === remoteTrackState.subbed ? (
+      {user.hasVideo === 1 ? (
         <div
           style={{
             ...{ display: 'flex', flex: 1 }
-            // ...maxViewStyles
           }}
-          // onMouseEnter={() => setIsShown(true)}
-          // onMouseLeave={() => setIsShown(false)}
         >
           <AgoraVideoPlayer
             style={{

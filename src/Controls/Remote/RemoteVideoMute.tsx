@@ -17,7 +17,10 @@ function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
     if (status && remoteUser) {
       try {
         client.unsubscribe(remoteUser, 'video').then(() => {
-          dispatch({ type: 'remote-user-mute-video', value: [UIKitUser, true] })
+          dispatch({
+            type: 'remote-user-mute-video',
+            value: [UIKitUser, remoteTrackState.yes]
+          })
         })
       } catch (error) {
         console.error(error)
@@ -27,7 +30,7 @@ function RemoteVideoMute(props: { UIKitUser: UIKitUser }) {
         client.subscribe(remoteUser, 'video').then(() => {
           dispatch({
             type: 'remote-user-mute-video',
-            value: [UIKitUser, false]
+            value: [UIKitUser, remoteTrackState.subbed]
           })
         })
       } catch (error) {

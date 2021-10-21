@@ -12,26 +12,33 @@ function RemoteAudioMute(props: { UIKitUser: UIKitUser }) {
   const isDisabled = UIKitUser.hasAudio === remoteTrackState.no
 
   const mute = async () => {
-    const remoteUser = client.remoteUsers?.find((u) => u.uid === UIKitUser.uid)
-    const status = UIKitUser.hasAudio === remoteTrackState.subbed
-    if (status && remoteUser) {
-      try {
-        client.unsubscribe(remoteUser, 'audio').then(() => {
-          dispatch({ type: 'remote-user-mute-audio', value: [UIKitUser, true] })
-        })
-      } catch (error) {
-        console.error(error)
-      }
-    } else if (remoteUser) {
-      try {
-        client.subscribe(remoteUser, 'audio').then(() => {
-          dispatch({
-            type: 'remote-user-mute-audio',
-            value: [UIKitUser, false]
+    if (UIKitUser.uid !== 0) {
+      const remoteUser = client.remoteUsers?.find(
+        (u) => u.uid === UIKitUser.uid
+      )
+      const status = UIKitUser.hasAudio === remoteTrackState.subbed
+      if (status && remoteUser) {
+        try {
+          client.unsubscribe(remoteUser, 'audio').then(() => {
+            dispatch({
+              type: 'remote-user-mute-audio',
+              value: [UIKitUser, remoteTrackState.yes]
+            })
           })
-        })
-      } catch (error) {
-        console.error(error)
+        } catch (error) {
+          console.error(error)
+        }
+      } else if (remoteUser) {
+        try {
+          client.subscribe(remoteUser, 'audio').then(() => {
+            dispatch({
+              type: 'remote-user-mute-audio',
+              value: [UIKitUser, remoteTrackState.subbed]
+            })
+          })
+        } catch (error) {
+          console.error(error)
+        }
       }
     }
   }
