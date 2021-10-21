@@ -23,11 +23,19 @@ const VideoPlaceholder = (props: VideoPlaceholderProps) => {
         ...maxViewStyles
       }}
     >
-      <div style={{ flex: 10, display: 'flex' }}>
+      <div
+        style={{
+          flex: 10,
+          display: 'flex',
+          position: 'relative',
+          justifyContent: 'center'
+        }}
+      >
         <img
           style={{
             width: 100,
             height: 100,
+            position: 'absolute',
             alignSelf: 'center',
             justifySelf: 'center',
             margin: 'auto',
