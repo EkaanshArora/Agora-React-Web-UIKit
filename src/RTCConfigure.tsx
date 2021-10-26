@@ -53,9 +53,9 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   )
 
   let client: IAgoraRTCClient
-  if (props.customRtcClient) {
+  if (rtcProps.customRtcClient) {
     // if prop then use custom client
-    client = props.customRtcClient
+    client = rtcProps.customRtcClient
   } else {
     client = useClient()
   }
@@ -545,10 +545,10 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
                 // eslint-disable-next-line no-unused-expressions
                 remoteUser.audioTrack?.play()
               } else {
-                if (props.enableDualStream && props.dualStreamMode) {
+                if (rtcProps.enableDualStream && rtcProps.dualStreamMode) {
                   client.setStreamFallbackOption(
                     remoteUser.uid,
-                    props.dualStreamMode
+                    rtcProps.dualStreamMode
                   )
                 }
               }
@@ -593,27 +593,29 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
           })
         })
 
-        // if (props.tokenUrl) {
-        //   const { tokenUrl, channel, uid } = props
+        if (rtcProps.tokenUrl) {
+          const { tokenUrl, channel, uid } = rtcProps
+          console.log('!setting token handler')
+          client.on('token-privilege-will-expire', async () => {
+            console.log('!will expire')
+            const res = await fetch(
+              tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0) + '/'
+            )
+            const data = await res.json()
+            const token = data.rtcToken
+            console.log('!', token)
+            client.renewToken(token)
+          })
 
-        //   client.on('token-privilege-will-expire', async () => {
-        //     const res = await fetch(
-        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0)
-        //     )
-        //     const data = await res.json()
-        //     const token = data.rtcToken
-        //     client.renewToken(token)
-        //   })
-
-        //   client.on('token-privilege-did-expire', async () => {
-        //     const res = await fetch(
-        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0)
-        //     )
-        //     const data = await res.json()
-        //     const token = data.rtcToken
-        //     client.renewToken(token)
-        //   })
-        // }
+          client.on('token-privilege-did-expire', async () => {
+            const res = await fetch(
+              tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0) + '/'
+            )
+            const data = await res.json()
+            const token = data.rtcToken
+            client.renewToken(token)
+          })
+        }
 
         if (callbacks) {
           const events: [keyof CallbacksInterface] = Object.keys(
@@ -656,7 +658,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
   useEffect(() => {
     async function publish() {
-      if (props.enableDualStream) {
+      if (rtcProps.enableDualStream) {
         await client.enableDualStream()
       }
       // handle publish fail if track is not enabled
@@ -748,29 +750,32 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   useEffect(() => {
     async function join(): Promise<void> {
       await canJoin.current
-      // const { tokenUrl, channel, uid: userUid, appId, token } = rtcProps
+      const { tokenUrl, channel, uid: userUid, appId, token } = rtcProps
       if (client) {
-        // if (tokenUrl) {
-        //   try {
-        //     const res = await fetch(
-        //       tokenUrl + '/rtc/' + channel + '/admin/uid/' + (userUid || 0)
-        //     )
-        //     console.log('!!', res)
-        //     const data = await res.json()
-        //     const token = data.rtcToken
-        //     console.log('!!', data, token)
-        //     uid.current = await client.join(appId, channel, token, userUid || 0)
-        //   } catch (e) {
-        //     console.log('!!', e)
-        //   }
-        // } else {
-        uid.current = await client.join(
-          rtcProps.appId,
-          rtcProps.channel,
-          rtcProps.token || null,
-          rtcProps.uid || 0
-        )
-        // }
+        if (tokenUrl) {
+          try {
+            const res = await fetch(
+              tokenUrl +
+                '/rtc/' +
+                channel +
+                '/admin/uid/' +
+                (userUid || 0) +
+                '/'
+            )
+            const data = await res.json()
+            const token = data.rtcToken
+            uid.current = await client.join(appId, channel, token, userUid || 0)
+          } catch (e) {
+            console.log('!!', e)
+          }
+        } else {
+          uid.current = await client.join(
+            appId,
+            channel,
+            token || null,
+            userUid || 0
+          )
+        }
         console.log('!uid', uid)
       } else {
         console.error('trying to join before RTC Engine was initialized')

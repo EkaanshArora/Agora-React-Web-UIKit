@@ -63,23 +63,13 @@ const GridVideo: React.FC = () => {
         ...gridVideoContainer
       }}
     >
-      {users.map((user) =>
-        // hasVideo is 1 if the local user has video enabled, or if remote user video is subbed
-        // user.hasVideo === 1 ? (
-          <MaxVideoView
-            user={user}
-            style={{ ...{ height: '100%', width: '100%' }, ...gridVideoCells }}
-            key={user.uid}
-          />
-          // <AgoraVideoPlayer
-          //   videoTrack={mediaStore[user.uid].videoTrack as IRemoteVideoTrack}
-          //   style={{ ...{ height: '100%', width: '100%' }, ...gridVideoCells }}
-          //   key={user.uid}
-          // />
-        // ) : (
-          // <VideoPlaceholder user={user} isShown={false} />
-        // )
-      )}
+      {users.map((user) => (
+        <MaxVideoView
+          user={user}
+          style={{ ...{ height: '100%', width: '100%' }, ...gridVideoCells }}
+          key={user.uid}
+        />
+      ))}
     </div>
   )
 }

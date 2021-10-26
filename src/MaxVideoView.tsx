@@ -28,6 +28,7 @@ const MaxVideoView = (props: {
       onMouseLeave={() => setIsShown(false)}
     >
       {user.hasVideo === 1 ? (
+        // hasVideo is 1 if the local user has video enabled, or if remote user video is subbed
         <div
           style={{
             ...{ display: 'flex', flex: 1 }
