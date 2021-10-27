@@ -3,12 +3,15 @@
  */
 import React, { useContext } from 'react'
 import RtcConfigure from './RTCConfigure'
-import { PropsProvider, PropsInterface, layout } from './PropsContext'
+import PropsContext, {
+  PropsProvider,
+  PropsInterface,
+  layout
+} from './PropsContext'
 import LocalControls from './Controls/LocalControls'
 import PinnedVideo from './PinnedVideo'
 import GridVideo from './GridVideo'
 import TracksConfigure from './TracksConfigure'
-import { PropsContext } from '.'
 
 /**
  * High level component to render the UI Kit

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import PropsContext from './PropsContext'
-import { MaxVideoView } from '.'
+import MaxVideoView from './MaxVideoView'
 
 const GridVideo: React.FC = () => {
   const { styleProps, rtcProps } = useContext(PropsContext)
