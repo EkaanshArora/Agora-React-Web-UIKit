@@ -284,9 +284,7 @@ const reducer = (
             if (user.uid === action.value[0].uid) {
               return {
                 uid: user.uid,
-                hasVideo: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
+                hasVideo: action.value[1],
                 hasAudio: user.hasAudio
               } as RemoteUIKitUser
             } else return user
@@ -295,9 +293,7 @@ const reducer = (
             if (user.uid === action.value[0].uid)
               return {
                 uid: user.uid,
-                hasVideo: action.value[1]
-                  ? remoteTrackState.yes
-                  : remoteTrackState.subbed,
+                hasVideo: action.value[1],
                 hasAudio: user.hasAudio
               } as RemoteUIKitUser
             else return user
