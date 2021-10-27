@@ -54,6 +54,7 @@ const VideocallUI = () => {
 const style = {
   display: 'flex',
   flex: 1,
+  minHeight: 0,
   flexDirection: 'column'
 } as React.CSSProperties
 

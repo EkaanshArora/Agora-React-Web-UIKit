@@ -7,7 +7,7 @@ import SwapUser from './Controls/SwapUser'
 const VideoPlaceholder = (props: VideoPlaceholderProps) => {
   const { styleProps, rtcProps } = useContext(PropsContext)
   const { maxViewStyles, maxViewOverlayContainer } = styleProps || {}
-  const { user, isMaxVideo } = props
+  const { user } = props
   const { CustomVideoPlaceholder } = rtcProps
 
   return !CustomVideoPlaceholder ? (
@@ -18,7 +18,8 @@ const VideoPlaceholder = (props: VideoPlaceholderProps) => {
           flex: 1,
           display: 'flex',
           backgroundColor: '#007bff33',
-          flexDirection: 'row'
+          flexDirection: 'row',
+          position: 'relative'
         },
         ...maxViewStyles
       }}
@@ -27,7 +28,6 @@ const VideoPlaceholder = (props: VideoPlaceholderProps) => {
         style={{
           flex: 10,
           display: 'flex',
-          position: 'relative',
           justifyContent: 'center'
         }}
       >
@@ -46,27 +46,15 @@ const VideoPlaceholder = (props: VideoPlaceholderProps) => {
       </div>
       {props.isShown && (
         <div
-          style={
-            !isMaxVideo
-              ? {
-                  ...{
-                    margin: 4,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column'
-                  },
-                  ...maxViewOverlayContainer
-                }
-              : {
-                  ...{
-                    position: 'absolute',
-                    margin: 5,
-                    flexDirection: 'column',
-                    display: 'flex'
-                  },
-                  ...maxViewOverlayContainer
-                }
-          }
+          style={{
+            ...{
+              position: 'absolute',
+              margin: 5,
+              flexDirection: 'column',
+              display: 'flex'
+            },
+            ...maxViewOverlayContainer
+          }}
         >
           {props.showButtons && (
             <React.Fragment>

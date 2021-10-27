@@ -27,7 +27,11 @@ const MinVideoView = (props: { user: UIKitUser }) => {
       {user.hasVideo === 1 ? (
         <div
           style={{
-            ...{ display: 'flex', flex: 1, backgroundColor: '#007bff33' }
+            ...{
+              display: 'flex',
+              flex: 1,
+              position: 'relative'
+            }
           }}
         >
           <AgoraVideoPlayer
@@ -42,6 +46,7 @@ const MinVideoView = (props: { user: UIKitUser }) => {
               style={{
                 ...{
                   margin: 4,
+                  position: 'absolute',
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column'

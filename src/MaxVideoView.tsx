@@ -31,7 +31,7 @@ const MaxVideoView = (props: {
         // hasVideo is 1 if the local user has video enabled, or if remote user video is subbed
         <div
           style={{
-            ...{ display: 'flex', flex: 1 }
+            ...{ display: 'flex', flex: 1, position: 'relative' }
           }}
         >
           <AgoraVideoPlayer
@@ -51,7 +51,7 @@ const MaxVideoView = (props: {
                 ...{
                   position: 'absolute',
                   margin: 5,
-                  flexDirection: 'row',
+                  flexDirection: 'column',
                   display: 'flex'
                 },
                 ...maxViewOverlayContainer
@@ -63,12 +63,7 @@ const MaxVideoView = (props: {
           )}
         </div>
       ) : (
-        <VideoPlaceholder
-          user={user}
-          isShown={isShown}
-          showButtons
-          isMaxVideo
-        />
+        <VideoPlaceholder user={user} isShown={isShown} showButtons />
       )}
     </div>
   )

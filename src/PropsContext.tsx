@@ -237,7 +237,6 @@ export interface VideoPlaceholderProps {
   isShown: boolean
   showButtons?: boolean
   showSwap?: boolean
-  isMaxVideo?: boolean
 }
 
 /**
