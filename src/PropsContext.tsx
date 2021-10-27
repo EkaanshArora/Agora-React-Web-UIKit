@@ -287,10 +287,10 @@ export interface RtcPropsInterface {
    * Choose between grid layout and pinned layout. (default: pinned layout)
    */
   layout?: layout
-  // /**
-  //  * Set local user's role between audience and host. Use with mode set to livestreaming. (default: host)
-  //  */
-  // role?: role
+  /**
+   * Set local user's role between audience and host. Use with mode set to livestreaming. (default: host)
+   */
+  role?: role
   // /**
   //  * Select between livestreaming and communication mode for the SDK. (default: communication)
   //  */
@@ -318,6 +318,11 @@ export enum layout {
    */
   pin = 1
 }
+
+/**
+ * User role for live streaming mode
+ */
+type role = 'audience' | 'host'
 
 // /**
 //  * User role for live streaming mode

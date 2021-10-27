@@ -7,7 +7,7 @@ import PropsContext from './PropsContext'
 import styles from './styles.module.css'
 
 const PinnedVideo: React.FC = () => {
-  const { styleProps } = useContext(PropsContext)
+  const { styleProps, rtcProps } = useContext(PropsContext)
   const { minViewContainer } = styleProps || {}
   const parentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
@@ -48,10 +48,11 @@ const PinnedVideo: React.FC = () => {
         }}
       >
         <MaxUidConsumer>
-          {(maxUsers) => (
-            // maxUsers[0] ? ( // check if audience & live don't render if uid === local
-            <MaxVideoView user={maxUsers[0]} />
-          )}
+          {(maxUsers) =>
+            rtcProps.role === 'audience' && maxUsers[0].uid === 0 ? null : (
+              <MaxVideoView user={maxUsers[0]} />
+            )
+          }
         </MaxUidConsumer>
       </div>
       <div
@@ -66,22 +67,24 @@ const PinnedVideo: React.FC = () => {
       >
         <MinUidConsumer>
           {(minUsers) =>
-            minUsers.map((user) => (
-              <div
-                style={{
-                  ...{
-                    minHeight: isLandscape ? '35vh' : '99%',
-                    minWidth: isLandscape ? '99%' : '40vw',
-                    margin: 2,
-                    display: 'flex'
-                  },
-                  ...minViewContainer
-                }}
-                key={user.uid}
-              >
-                <MinVideoView user={user} />
-              </div>
-            ))
+            minUsers.map((user) =>
+              rtcProps.role === 'audience' && user.uid === 0 ? null : (
+                <div
+                  style={{
+                    ...{
+                      minHeight: isLandscape ? '35vh' : '99%',
+                      minWidth: isLandscape ? '99%' : '40vw',
+                      margin: 2,
+                      display: 'flex'
+                    },
+                    ...minViewContainer
+                  }}
+                  key={user.uid}
+                >
+                  <MinVideoView user={user} />
+                </div>
+              )
+            )
           }
         </MinUidConsumer>
       </div>

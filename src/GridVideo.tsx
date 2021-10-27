@@ -1,20 +1,20 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
-// import { AgoraVideoPlayer, IRemoteVideoTrack } from 'agora-rtc-react'
-// import RtcContext from './RtcContext'
 import PropsContext from './PropsContext'
-// import VideoPlaceholder from './VideoPlaceholder'
 import { MaxVideoView } from '.'
 
 const GridVideo: React.FC = () => {
-  const { styleProps } = useContext(PropsContext)
+  const { styleProps, rtcProps } = useContext(PropsContext)
   const { gridVideoCells, gridVideoContainer } = styleProps || {}
   const max = useContext(MaxUidContext)
   const min = useContext(MinUidContext)
-  const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
-  // const { mediaStore } = useContext(RtcContext)
 
+  // const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
+  const users =
+    rtcProps.role === 'audience'
+      ? [...max, ...min].filter((user) => user.uid !== 0)
+      : [...max, ...min]
   const parentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(window.innerWidth)
   const [height, setHeight] = useState(window.innerHeight)
