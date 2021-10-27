@@ -228,7 +228,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             const token = data.rtcToken
             uid.current = await client.join(appId, channel, token, userUid || 0)
           } catch (e) {
-            console.log('!!', e)
+            console.log(e)
           }
         } else {
           uid.current = await client.join(

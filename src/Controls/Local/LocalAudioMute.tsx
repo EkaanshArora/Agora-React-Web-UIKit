@@ -29,7 +29,7 @@ function LocalAudioMute() {
         })
         try {
           await localAudioTrack?.setEnabled(localState !== ToggleState.enabled)
-          console.log('!!muted audio', localState)
+          console.log('muted audio', localState)
           // Enable UI
           dispatch({
             type: 'local-user-mute-audio',

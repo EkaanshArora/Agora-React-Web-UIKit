@@ -176,6 +176,10 @@ export interface StylePropInterface {
    */
   minViewContainer?: React.CSSProperties
   /**
+   * Style for the big view container
+   */
+  maxViewContainer?: React.CSSProperties
+  /**
    * Style for the overlay on small user view when pressed in pinned layout
    */
   minViewOverlayContainer?: React.CSSProperties
@@ -208,9 +212,17 @@ export interface StylePropInterface {
    */
   gridVideoCells?: React.CSSProperties
   /**
-   * Applies style to the individual cell (view) containing the video in the grid layout
+   * Applies style to the grid container
    */
   gridVideoContainer?: React.CSSProperties
+  /**
+   * Applies style to the grid container
+   */
+  pinnedVideoContainer?: React.CSSProperties
+  /**
+   * Applies style to the pinned scrollview container
+   */
+  scrollViewContainer?: React.CSSProperties
   /**
    * Applies style to the global view containing the UI Kit
    */
@@ -290,7 +302,7 @@ export interface RtcPropsInterface {
   /**
    * Set local user's role between audience and host. Use with mode set to livestreaming. (default: host)
    */
-  role?: role
+  role: role
   // /**
   //  * Select between livestreaming and communication mode for the SDK. (default: communication)
   //  */
@@ -489,7 +501,8 @@ export interface IconsInterface {
 const initialValue: PropsInterface = {
   rtcProps: {
     appId: '',
-    channel: ''
+    channel: '',
+    role: 'host'
   }
 }
 

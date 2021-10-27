@@ -6,7 +6,7 @@ import LocalUserContextComponent from '../LocalUserContext'
 import PropsContext from '../PropsContext'
 
 function LocalControls() {
-  const { styleProps } = useContext(PropsContext)
+  const { styleProps, rtcProps } = useContext(PropsContext)
   const { localBtnContainer } = styleProps || {}
 
   return (
@@ -26,8 +26,8 @@ function LocalControls() {
           ...localBtnContainer
         }}
       >
-        <LocalVideoMute />
-        <LocalAudioMute />
+        {rtcProps.role === 'host' && <LocalVideoMute />}
+        {rtcProps.role === 'host' && <LocalAudioMute />}
         <EndCall />
       </div>
     </LocalUserContextComponent>

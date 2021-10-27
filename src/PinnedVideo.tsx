@@ -8,7 +8,12 @@ import styles from './styles.module.css'
 
 const PinnedVideo: React.FC = () => {
   const { styleProps, rtcProps } = useContext(PropsContext)
-  const { minViewContainer } = styleProps || {}
+  const {
+    minViewContainer,
+    pinnedVideoContainer,
+    maxViewContainer,
+    scrollViewContainer
+  } = styleProps || {}
   const parentRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)
@@ -35,16 +40,22 @@ const PinnedVideo: React.FC = () => {
     <div
       ref={parentRef}
       style={{
-        display: 'flex',
-        flex: 1,
-        flexDirection: isLandscape ? 'row' : 'column-reverse',
-        overflow: 'hidden'
+        ...{
+          display: 'flex',
+          flex: 1,
+          flexDirection: isLandscape ? 'row' : 'column-reverse',
+          overflow: 'hidden'
+        },
+        ...pinnedVideoContainer
       }}
     >
       <div
         style={{
-          display: 'flex',
-          flex: isLandscape ? 5 : 4
+          ...{
+            display: 'flex',
+            flex: isLandscape ? 5 : 4
+          },
+          ...maxViewContainer
         }}
       >
         <MaxUidConsumer>
@@ -58,11 +69,14 @@ const PinnedVideo: React.FC = () => {
       <div
         className={styles.scrollbar}
         style={{
-          overflowY: isLandscape ? 'scroll' : 'hidden',
-          overflowX: !isLandscape ? 'scroll' : 'hidden',
-          display: 'flex',
-          flex: 1,
-          flexDirection: isLandscape ? 'column' : 'row'
+          ...{
+            overflowY: isLandscape ? 'scroll' : 'hidden',
+            overflowX: !isLandscape ? 'scroll' : 'hidden',
+            display: 'flex',
+            flex: 1,
+            flexDirection: isLandscape ? 'column' : 'row'
+          },
+          ...scrollViewContainer
         }}
       >
         <MinUidConsumer>

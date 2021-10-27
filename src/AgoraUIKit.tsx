@@ -1,13 +1,14 @@
 /**
  * @module AgoraUIKit
  */
-import React from 'react'
+import React, { useContext } from 'react'
 import RtcConfigure from './RTCConfigure'
 import { PropsProvider, PropsInterface, layout } from './PropsContext'
 import LocalControls from './Controls/LocalControls'
 import PinnedVideo from './PinnedVideo'
 import GridVideo from './GridVideo'
 import TracksConfigure from './TracksConfigure'
+import { PropsContext } from '.'
 
 /**
  * High level component to render the UI Kit
@@ -21,38 +22,36 @@ const AgoraUIKit: React.FC<PropsInterface> = (props) => {
     <PropsProvider value={props}>
       <div
         style={{
-          ...{
-            display: 'flex',
-            flex: 1,
-            flexDirection: 'column'
-          },
+          ...style,
           ...UIKitContainer
         }}
       >
         {rtcProps.role === 'audience' ? (
-          <RtcConfigure callActive={props.rtcProps.callActive}>
-            {props.rtcProps?.layout === layout.grid ? (
-              <GridVideo />
-            ) : (
-              <PinnedVideo />
-            )}
-            <LocalControls />
-          </RtcConfigure>
+          <VideocallUI />
         ) : (
           <TracksConfigure>
-            <RtcConfigure callActive={props.rtcProps.callActive}>
-              {props.rtcProps?.layout === layout.grid ? (
-                <GridVideo />
-              ) : (
-                <PinnedVideo />
-              )}
-              <LocalControls />
-            </RtcConfigure>
+            <VideocallUI />
           </TracksConfigure>
         )}
       </div>
     </PropsProvider>
   )
 }
+
+const VideocallUI = () => {
+  const { rtcProps } = useContext(PropsContext)
+  return (
+    <RtcConfigure callActive={rtcProps.callActive}>
+      {rtcProps?.layout === layout.grid ? <GridVideo /> : <PinnedVideo />}
+      <LocalControls />
+    </RtcConfigure>
+  )
+}
+
+const style = {
+  display: 'flex',
+  flex: 1,
+  flexDirection: 'column'
+} as React.CSSProperties
 
 export default AgoraUIKit
