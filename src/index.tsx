@@ -22,7 +22,7 @@ import MinUidContext from './MinUidContext'
 import MaxUidContext from './MaxUidContext'
 import PropsContext from './PropsContext'
 import RtcContext from './RtcContext'
-
+import TracksConfigure from './TracksConfigure'
 export default AgoraUIKit
 export {
   RemoteVideoMute,
@@ -40,6 +40,7 @@ export {
   MinVideoView,
   VideoPlaceholder,
   RtcConfigure,
+  TracksConfigure,
   LocalUserContext,
   MaxUidContext,
   MinUidContext,

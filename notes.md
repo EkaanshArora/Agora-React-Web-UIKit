@@ -1,14 +1,21 @@
+Questions
+- new prop, renderTracks that replaces audience check in tracksconfig
+
+
+Limitations:
+- custom tracks
+- use custom client for rtc mode
+- don't use audience with mode rtc
+
 TODO:
-- Bundle CSS with UIKit
-- Export sub components from module
-- Fix remote controls scrolling position (refactor into component)
-- Live Streaming (mode/role)
+- Improve Typescript
 - Optional (enableAudio/enableVideo)
-- Support for tokenUrl
 - Add screenshare
 - Support for custom tracks
 
-Supported:
+Done:
+- Live Streaming (mode/role)
+- Support for tokenUrl
 - activeSpeaker
 - dualStreamMode
 - callActive (can be used for precall)
@@ -19,7 +26,15 @@ Supported:
 - video placeholder
 - recompose the app
 - join using appId, channel, uid, token
+- Bundle CSS with UIKit
+- Export sub components from module
+- Fix remote controls scrolling position (refactor into component)
+- unsubscribe when remote mute
+- 
 _____________________________
+
+- iFrame
+    - Add classname
 
 discuss
 - tracks init error
