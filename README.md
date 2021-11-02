@@ -23,7 +23,7 @@ This UIKit is very simple to use and contains a high level component called `Ago
 **A simple sample app integrating Agora UI Kit:**
 ```javascript
 import React, {useState} from 'react';
-import AgoraUIKit from 'agora-react-web-uikit';
+import AgoraUIKit from 'agora-react-uikit';
 
 const App = () => {
   const [videoCall, setVideoCall] = useState(true);
