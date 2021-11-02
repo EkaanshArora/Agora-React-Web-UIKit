@@ -1,15 +1,11 @@
-Questions
+API Choices
 - new prop, renderTracks that replaces audience check in tracksconfig
-
-
-Limitations:
-- custom tracks
-- use custom client for rtc mode
-- don't use audience with mode rtc
-
+- move tracksconfigure to rtcConfigure?
 TODO:
 - Improve Typescript
+- rename isShown to buttonsDisplayed for videoplaceholder
 - Optional (enableAudio/enableVideo)
+- Switch Camera
 - Add screenshare
 - Support for custom tracks
 
@@ -35,6 +31,24 @@ _____________________________
 
 - iFrame
     - Add classname
+_____________________________
+
+Screenshare
+- Selective subscription
+- new component, rendered on btn click, onmount do init/join/etc
+- don't sub to screenuid, store it in context, update state on join 
+
+
+// Create => mode ? return <Live> : return <Rtc>
+// Live => Render provider and set values
+// prop: rtc -> no role, if live role is required
+<Create mode={rtc/live} role={} > // create 2 contexts -> 
+// internally returns two components based on Prop
+<Join tracks={[]}>
+    <RtcProvider></RtcProvider>
+</Join>
+// createlive.tsx (configure component)
+
 
 discuss
 - tracks init error

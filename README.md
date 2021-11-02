@@ -1,11 +1,62 @@
 # agora-react-uikit
 
-> A React based UIKit for the Agora Web SDK
+> Instantly integrate Agora video calling or streaming into your web application using a React based UIKit for the Agora Web SDK.
 
 [![NPM](https://img.shields.io/npm/v/agora-react-uikit.svg)](https://www.npmjs.com/package/agora-react-uikit) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-## How to use
-- Instal Node.js LTS
-- Add your Agora App ID to `/example/src/App.tsx`
-- Run `npm start` to start the bundler
-- Run `cd example && npm start` to run the example app
+## Getting started
+### Requirements
+- [An Agora developer account](https://www.agora.io/en/blog/how-to-get-started-with-agora?utm_source=github&utm_repo=agora-react-web-uikit)
+- A React Project
+
+### Installation
+To a react application, add the following:
+
+```
+npm i agora-react-uikit
+```
+
+### Usage
+
+This UIKit is very simple to use and contains a high level component called `AgoraUIKit`. You can check out code explanation here.
+
+**A simple sample app integrating Agora UI Kit:**
+```javascript
+import React, {useState} from 'react';
+import AgoraUIKit from 'agora-react-web-uikit';
+
+const App = () => {
+  const [videoCall, setVideoCall] = useState(true);
+  const rtcProps = {
+    appId: '<Agora App ID>',
+    channel: 'test',
+    token: '<Your Agora Token>' // skip if you're using an app in insecure mode
+  };
+  const callbacks = {
+    EndCall: () => setVideoCall(false),
+  };
+  return videoCall ? (
+    <AgoraUIKit rtcProps={rtcProps} callbacks={callbacks} />
+  ) : (
+    <Text onPress={()=>setVideoCall(true)}>Start Call</Text>
+  );
+};
+
+export default App;
+```
+
+**Insert your Agora AppID and Token**.
+
+### Demo Project
+There's a demo project in the repo [here](https://github.com/AgoraIO-Community/agora-react-web-uikit/tree/main/example).
+
+### Instructions for running the demo:
+1. Add your Agora App ID to `/example/src/App.tsx`
+2. Run `npm start` to start the bundler to build the library
+3. Execute `cd example && npm start` to run the example app
+
+## Documentation
+
+For full documentation, see our [docs page](https://agoraio-community.github.io/agora-react-web-uikit/).
+
+You can visit the [wiki](https://github.com/AgoraIO-Community/ReactNative-UIKit/wiki) for other examples and in depth guide.

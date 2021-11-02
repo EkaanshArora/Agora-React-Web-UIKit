@@ -211,7 +211,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       if (client) {
         if (rtcProps.role === 'audience') {
           client.setClientRole(rtcProps.role)
-        } else if (rtcProps.role === 'host') {
+        } else {
           client.setClientRole('host')
         }
         if (tokenUrl) {
