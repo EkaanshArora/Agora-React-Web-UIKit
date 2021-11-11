@@ -22,9 +22,6 @@ import reducer, { initState } from './Reducer'
 const useClient = createClient({ codec: 'vp8', mode: 'live' }) // pass in another client if use h264
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
-  // let inScreenshare = false
-  // let screenStream: ScreenStream = {}
-  // const screenClient = useScreenClient()
   const uid = useRef<UID>()
   const { localVideoTrack, localAudioTrack } = useContext(TracksContext)
   const { callbacks, rtcProps } = useContext(PropsContext)
@@ -79,17 +76,11 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         client.on('user-published', async (...args) => {
           // Get current peer IDs
           const [remoteUser, mediaType] = args
-          console.log('!user-published', remoteUser.uid)
-          // if (screenClient.uid === remoteUser.uid) {
-          //   dispatch({
-          //     type: 'user-published',
-          //     value: args
-          //   })
-          // } else {
+          console.log('user-published', remoteUser.uid)
           client
             .subscribe(remoteUser, mediaType)
             .then((e) => {
-              console.log('!sub', e)
+              console.log('subscribe', e)
               mediaStore.current[remoteUser.uid][mediaType + 'Track'] =
                 remoteUser[mediaType + 'Track']
               if (mediaType === 'audio') {
@@ -114,7 +105,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
         client.on('user-unpublished', async (...args) => {
           const [remoteUser, mediaType] = args
-          console.log('!user-unpublished', remoteUser.uid)
+          console.log('user-unpublished', remoteUser.uid)
           if (mediaType === 'audio') {
             // eslint-disable-next-line no-unused-expressions
             remoteUser.audioTrack?.stop()
@@ -127,7 +118,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
         client.on('connection-state-change', async (...args) => {
           const [curState, prevState, reason] = args
-          console.log('!connection', prevState, curState, reason)
+          console.log('connection', prevState, curState, reason)
           if (curState === 'CONNECTED') {
             setChannelJoined(true)
           } else if (curState === 'DISCONNECTED') {
@@ -146,15 +137,13 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
 
         if (rtcProps.tokenUrl) {
           const { tokenUrl, channel, uid } = rtcProps
-          console.log('!setting token handler')
           client.on('token-privilege-will-expire', async () => {
-            console.log('!will expire')
+            console.log('token will expire')
             const res = await fetch(
               tokenUrl + '/rtc/' + channel + '/admin/uid/' + (uid || 0) + '/'
             )
             const data = await res.json()
             const token = data.rtcToken
-            console.log('!', token)
             client.renewToken(token)
           })
 
@@ -237,7 +226,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
             userUid || 0
           )
         }
-        console.log('!uid', uid)
+        console.log('uid: ', uid)
       } else {
         console.error('trying to join before RTC Engine was initialized')
       }
@@ -280,7 +269,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
         }
       }
     }
-    console.log('!publish', localVideoTrack, localAudioTrack, callActive)
+    console.log('Publish', localVideoTrack, localAudioTrack, callActive)
     if (callActive) {
       publish()
     }
@@ -369,75 +358,6 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
       client.removeAllListeners('volume-indicator')
     }
   }, [rtcProps.activeSpeaker, rtcProps.layout])
-
-  // const isSingleTrack = (
-  //   x: ILocalVideoTrack | [ILocalVideoTrack, ILocalAudioTrack]
-  // ): x is ILocalVideoTrack => {
-  //   if ((x as [ILocalVideoTrack, ILocalAudioTrack]).length) {
-  //     return false
-  //   } else {
-  //     return true
-  //   }
-  // }
-  // const startScreenshare = async (): Promise<void> => {
-  //   if (!inScreenshare) {
-  //     try {
-  //       console.log('[screenshare]: creating stream')
-  //       const screenTracks = await AgoraRTC.createScreenVideoTrack({})
-  //       if (isSingleTrack(screenTracks)) {
-  //         screenStream.video = screenTracks
-  //       } else {
-  //         screenStream.video = screenTracks[0]
-  //         screenStream.audio = screenTracks[1]
-  //       }
-  //     } catch (e) {
-  //       console.log('[screenshare]: Error during intialization');
-  //       throw e
-  //     }
-
-  //     await screenClient.join(
-  //       rtcProps.appId,
-  //       rtcProps.channel,
-  //       rtcProps.token || null,
-  //       0
-  //       // rtcProps.uid || 0
-  //     )
-
-  //     inScreenshare = true
-  //     await screenClient.publish(
-  //       screenStream.audio
-  //         ? [screenStream.video, screenStream.audio]
-  //         : screenStream.video,
-  //     )
-
-  //     screenStream.video.on('track-ended', () => {
-  //       // dispatch({ type: 'screenshare-ended', action: [] })
-
-  //       screenClient.leave()
-  //       // eslint-disable-next-line no-unused-expressions
-  //       screenStream.audio?.close()
-  //       // eslint-disable-next-line no-unused-expressions
-  //       screenStream.video?.close()
-  //       screenStream = {}
-
-  //       inScreenshare = false
-  //     })
-  //   } else {
-  //     // dispatch({ type: 'screenshare-ended', action: [] })
-  //     screenClient.leave()
-  //     try {
-  //       // eslint-disable-next-line no-unused-expressions
-  //       screenStream.audio?.close()
-  //       // eslint-disable-next-line no-unused-expressions
-  //       screenStream.video?.close()
-  //       screenStream = {}
-  //     } catch (err) {
-  //       console.log(err)
-  //       throw err
-  //     }
-  //     inScreenshare = false
-  //   }
-  // }
 
   return (
     <RtcProvider

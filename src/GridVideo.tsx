@@ -9,8 +9,6 @@ const GridVideo: React.FC = () => {
   const { gridVideoCells, gridVideoContainer } = styleProps || {}
   const max = useContext(MaxUidContext)
   const min = useContext(MinUidContext)
-
-  // const users = [...max, ...min] // users = useAgoraUser([..max, ..min])
   const users =
     rtcProps.role === 'audience'
       ? [...max, ...min].filter((user) => user.uid !== 0)
