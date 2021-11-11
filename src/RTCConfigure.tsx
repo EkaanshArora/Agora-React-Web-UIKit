@@ -14,7 +14,7 @@ import PropsContext, {
   CallbacksInterface
 } from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
-import { createClient, UID, IAgoraRTCClient } from 'agora-rtc-react'
+import { createClient, UID } from 'agora-rtc-react'
 import { MinUidProvider } from './MinUidContext'
 import TracksContext from './TracksContext'
 import reducer, { initState } from './Reducer'
@@ -38,12 +38,11 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     })
   )
 
-  let client: IAgoraRTCClient
+  let client = useClient()
   if (rtcProps.customRtcClient) {
-    // if prop then use custom client
+    // if customRtcClient prop is set then use custom client
+    client.removeAllListeners()
     client = rtcProps.customRtcClient
-  } else {
-    client = useClient()
   }
 
   let localVideoTrackHasPublished = false
