@@ -14,12 +14,16 @@ import PropsContext, {
   CallbacksInterface
 } from './PropsContext'
 import { MaxUidProvider } from './MaxUidContext'
-import { createClient, UID } from 'agora-rtc-react'
+import AgoraRTC, { createClient, UID } from 'agora-rtc-react'
 import { MinUidProvider } from './MinUidContext'
 import TracksContext from './TracksContext'
 import reducer, { initState } from './Reducer'
 
 const useClient = createClient({ codec: 'vp8', mode: 'live' }) // pass in another client if use h264
+
+// @ts-ignore
+// eslint-disable-next-line prettier/prettier
+AgoraRTC.setParameter("{\"rtc.using_ui_kit\": 1}")
 
 const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
   const uid = useRef<UID>()
@@ -63,6 +67,7 @@ const RtcConfigure: React.FC<Partial<RtcPropsInterface>> = (props) => {
     async function init() {
       try {
         console.log(client)
+        client.setParameters("")
         client.on('user-joined', async (...args) => {
           const [remoteUser] = args
           console.log('!user-joined', remoteUser)
